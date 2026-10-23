@@ -17,13 +17,13 @@ public static class Seo
 {
     public const string SiteName = "Reconza";
     public const string DefaultDescription =
-        "Reconcile trip sheets, fuel card statements and marketplace payouts from your Excel files. Catch duplicates and mismatches, then download the settlement.";
+        "Compare Excel and CSV files, find missing or duplicate records and incorrect amounts, then download a clear checked report. No formulas needed.";
 
     private static readonly DateOnly Launch = new(2026, 10, 21);
 
     public static readonly IReadOnlyList<SeoPage> Pages =
     [
-        new("/", "Reconza — Driver Settlement & Reconciliation Software", DefaultDescription, Launch, "weekly", 1.0),
+        new("/", "Reconza — Compare & Reconcile Excel and CSV Files", DefaultDescription, Launch, "weekly", 1.0),
         new("/pricing", "Pricing — plans from ₹999/month", "Simple monthly plans for reconciliation and driver settlement. Start free, pay in ₹ via UPI and cards or in $ by card. No setup fee.", Launch, "monthly", 0.8),
         new("/solutions/driver-settlement-software", "Driver settlement software for transporters & fleets", "Automate weekly driver settlements: match trips, fuel card fills and deductions, catch duplicate trips and short-paid freight, and issue driver statements.", Launch, "monthly", 0.9),
         new("/solutions/marketplace-payout-reconciliation", "Marketplace payout reconciliation for online sellers", "Match your order export against marketplace settlement and fee reports. Find unpaid orders, short payments and unexpected fees in minutes, not days.", Launch, "monthly", 0.8),

@@ -1,13 +1,32 @@
 @page "/guides"
+@{
+    var driverGuide = Seo.For("/guides/weekly-driver-settlement-excel")!;
+    var template = Seo.For("/guides/driver-settlement-excel-template")!;
+    var fuel = Seo.For("/guides/fuel-card-reconciliation")!;
+    var marketplace = Seo.For("/guides/marketplace-settlement-reconciliation")!;
+}
 @section Head { @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Guides", "/guides"))) }
 <section class="page-hero">
-    <h1>Reconciliation guides</h1>
-    <p>Practical, step-by-step methods for the reconciliations operations teams do every week — in Excel, and with Reconza.</p>
+    <span class="badge badge-brand">Practical guides &amp; free files</span>
+    <h1>Check business spreadsheets with more confidence</h1>
+    <p>Step-by-step guides for comparing reports, calculating driver payments and checking marketplace payouts—with Excel or Reconza.</p>
 </section>
-<div class="grid grid-3">
-    @foreach (var g in Seo.Pages.Where(p => p.Path.StartsWith("/guides/")))
-    {
-        <a class="card card-link" href="@g.Path"><h3>@g.Title</h3><p class="muted small">@g.Description</p><span class="small">Read guide →</span></a>
-    }
-</div>
+
+<section class="resource-feature card">
+    <div><span class="eyebrow">Free download</span><h2>Driver settlement Excel template</h2><p>Paste trips, fuel and deductions into a ready-made workbook. It calculates net pay and flags duplicate trips and fuel entries with no matching trip.</p><a class="btn" href="@template.Path">Get the free template →</a></div>
+    <div class="resource-sheet" aria-hidden="true"><span>Trips</span><span>Fuel</span><span>Deductions</span><strong>Settlement ✓</strong></div>
+</section>
+
+<section class="section">
+    <div class="section-heading"><span class="eyebrow">Transport &amp; fleets</span><h2 class="section-title">Driver payments and fuel checks</h2></div>
+    <div class="grid grid-2">
+        <a class="card card-link resource-card" href="@driverGuide.Path"><span class="resource-type">Step-by-step guide</span><h3>Calculate weekly driver payments in Excel</h3><p>@driverGuide.Description</p><span>Read the guide →</span></a>
+        <a class="card card-link resource-card" href="@fuel.Path"><span class="resource-type">Practical checklist</span><h3>Match fuel card statements with trips</h3><p>@fuel.Description</p><span>Read the guide →</span></a>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-heading"><span class="eyebrow">Online selling</span><h2 class="section-title">Understand marketplace payouts</h2></div>
+    <a class="card card-link resource-card resource-wide" href="@marketplace.Path"><span class="resource-type">Order-by-order method</span><h3>Check marketplace settlements against your orders</h3><p>@marketplace.Description</p><span>Read the guide →</span></a>
+</section>
 <partial name="_Cta" model="@((string?)null)" />

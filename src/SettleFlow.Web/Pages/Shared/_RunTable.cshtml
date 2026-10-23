@@ -1,19 +1,19 @@
 @model List<SettleFlow.Web.Data.Run>
 @if (Model.Count == 0)
 {
-    <div class="empty"><div class="empty-icon">⇄</div><strong>No runs yet</strong><div class="muted small">Runs appear here once you reconcile a set of files.</div></div>
+    <div class="empty"><div class="empty-icon">⇄</div><strong>No checks yet</strong><div class="muted small">Your completed and in-progress file checks will appear here.</div></div>
 }
 else
 {
     <div class="table-wrap">
-    <table class="clickable">
-        <thead><tr><th>Run</th><th>Workflow</th><th>When</th><th class="num">Net</th><th class="num">Exceptions</th></tr></thead>
+    <table class="clickable responsive-table run-history-table">
+        <thead><tr><th>Check</th><th>Saved setup</th><th>When</th><th class="num">Net</th><th class="num">Issues</th></tr></thead>
         <tbody>
         @foreach (var r in Model)
         {
             var url = Url.Page("/Runs/Details", new { id = r.Id });
             <tr data-href="@url">
-                <td><a href="@url">@r.Label</a>
+                <td data-label="Check"><a href="@url"><strong>@r.Label</strong></a>
                     @switch (r.Status)
                     {
                         case RunStatus.Queued: <span class="badge">Queued</span> break;
@@ -21,10 +21,10 @@ else
                         case RunStatus.Failed: <span class="badge badge-bad">Failed</span> break;
                     }
                 </td>
-                <td class="muted">@r.WorkflowName</td>
-                <td class="muted small" title="@r.CreatedAt.ToString("u")">@r.CreatedAt.ToString("dd MMM, HH:mm")</td>
-                <td class="num">@(r.Status == RunStatus.Completed ? r.NetTotal.ToString("N2") : "—")</td>
-                <td class="num">@if (r.Status != RunStatus.Completed) { <span class="muted">—</span> } else if (r.ExceptionCount > 0) { <span class="badge badge-warn">@r.ExceptionCount</span> } else { <span class="badge badge-ok">0</span> }</td>
+                <td data-label="Saved check" class="muted">@r.WorkflowName</td>
+                <td data-label="When" class="muted small" title="@r.CreatedAt.ToString("u")">@r.CreatedAt.ToString("dd MMM, HH:mm")</td>
+                <td data-label="Net" class="num">@(r.Status == RunStatus.Completed ? r.NetTotal.ToString("N2") : "—")</td>
+                <td data-label="Issues" class="num">@if (r.Status != RunStatus.Completed) { <span class="muted">—</span> } else if (r.ExceptionCount > 0) { <span class="badge badge-warn">@r.ExceptionCount</span> } else { <span class="badge badge-ok">0</span> }</td>
             </tr>
         }
         </tbody>

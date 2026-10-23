@@ -10,6 +10,7 @@
         <div class="field"><label asp-for="Password">Password</label><input asp-for="Password" type="password" autocomplete="current-password" /></div>
         <button class="btn" type="submit">Sign in</button>
         <a class="small" asp-page="ForgotPassword" style="margin-left:10px">Forgot password?</a>
-        <span class="muted small" style="margin-left:10px">New here? <a asp-page="Register">Start a free trial</a></span>
+        <a class="small" asp-page="ResendConfirmation" style="margin-left:10px">Resend confirmation email</a>
+        <span class="muted small" style="margin-left:10px">New here? <a asp-page="Register">Create a free account</a></span>
     </form>
 </div>

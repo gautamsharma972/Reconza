@@ -42,7 +42,7 @@
 
     @if (!Model.DetailsAvailable)
     {
-        <div class="alert alert-info">Line items aren't available — this run's files were deleted under your retention policy, or it ran before itemized statements existed. Totals above are final.</div>
+        <div class="alert alert-info">Line items aren't available because this check's files were deleted under your retention policy, or the check was completed before detailed statements were available. The totals above are unchanged.</div>
     }
     @foreach (var (source, cols, rows) in Model.Sections)
     {

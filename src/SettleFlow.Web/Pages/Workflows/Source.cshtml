@@ -6,12 +6,19 @@
     var isPrimary = Model.Role == SourceRole.Primary;
     var numberFields = Model.Def.Fields.Where(f => f.Type == FieldType.Number).ToList();
     string ConfClass(double c) => c >= 0.85 ? "badge-ok" : c >= 0.6 ? "badge-warn" : "badge-bad";
+    string RoleLabel(SourceRole role) => role switch
+    {
+        SourceRole.Primary => "Main list",
+        SourceRole.Deduction => "Subtracts from result",
+        SourceRole.Addition => "Adds to result",
+        _ => "Used for checking"
+    };
 }
 <div class="page-head">
     <div>
-        <div class="crumbs"><a asp-page="Index">Workflows</a> / <a asp-page="Edit" asp-route-id="@Model.Workflow.Id">@Model.Workflow.Name</a></div>
-        <h1>@Model.Source.Name <span class="badge role-badge role-@Model.Role">@Model.Role</span></h1>
-        <div class="muted">Tell Reconza how to read this file. You only do this once — the mapping is reused every run.</div>
+        <div class="crumbs"><a asp-page="Index">Saved checks</a> / <a asp-page="Edit" asp-route-id="@Model.Workflow.Id">@Model.Workflow.Name</a></div>
+        <h1>@Model.Source.Name <span class="badge role-badge role-@Model.Role">@RoleLabel(Model.Role)</span></h1>
+        <div class="muted">Tell Reconza how to read this file. You only do this once—the column choices are reused every time.</div>
     </div>
 </div>
 
@@ -23,8 +30,7 @@
         <div class="step-num">1</div>
         <div class="step-body">
             <h2>Load a sample file <span class="muted small">recommended</span></h2>
-            <p class="muted small">Drop last week's file for this source. We'll read its columns, show a preview and pre-fill the mapping
-                using matching rules plus a local AI model. The sample isn't stored.</p>
+            <p class="muted small">Use a recent example of this file. Reconza will read its column names, show a preview and suggest where each value belongs. The sample isn't stored.</p>
             <label class="dropzone dropzone-sm" data-dropzone>
                 <input type="file" name="SampleFile" accept=".xlsx,.xls,.csv" data-autosubmit="Analyze" />
                 <span class="dz-icon" aria-hidden="true">⤒</span>
@@ -34,7 +40,7 @@
             <div class="row" style="margin-top:10px">
                 <input asp-for="SheetName" placeholder="Worksheet (blank = first)" style="max-width:240px" list="sheets" />
                 <datalist id="sheets">@foreach (var s in Model.SheetNames) { <option value="@s"></option> }</datalist>
-                <button class="btn btn-secondary" type="submit" asp-page-handler="Analyze" data-busy="Reading file and asking AI…">Analyze file</button>
+                <button class="btn btn-secondary" type="submit" asp-page-handler="Analyze" data-busy="Reading file…">Read sample file</button>
             </div>
             @if (Model.AnalyzeMessage is not null)
             {
@@ -66,10 +72,10 @@
                 {
                     var (title, desc) = role switch
                     {
-                        SourceRole.Primary => ("System of record", "e.g. your trip register. Everything else is checked against it."),
-                        SourceRole.Deduction => ("Deduction", "Amounts subtracted — fuel advances, tolls, damages."),
-                        SourceRole.Addition => ("Addition", "Amounts added — bonuses, reimbursements."),
-                        _ => ("Reference only", "Used only to cross-check, e.g. a customer's shipment report.")
+                        SourceRole.Primary => ("Main list", "Your starting list, such as a trip register. Other files are checked against it."),
+                        SourceRole.Deduction => ("Subtract from result", "For costs such as fuel advances, tolls or damages."),
+                        SourceRole.Addition => ("Add to result", "For bonuses, reimbursements or other additions."),
+                        _ => ("Use for checking only", "Cross-check records or amounts without changing the final total.")
                     };
                     <label class="role-option role-@role">
                         <input type="radio" name="Role" value="@role" checked="@(role == Model.Role)" />
@@ -84,12 +90,16 @@
         <div class="step-num">3</div>
         <div class="step-body">
             <h2>Match columns to fields</h2>
-            <p class="muted small">Leave a field blank if the file doesn't have it. <strong>Required</strong> rows missing a value are flagged.
-                <strong>Unique key</strong> fields identify duplicates. @if (!isPrimary) { <span><strong>Match</strong> fields link rows to @(Model.Primary?.Name ?? "the primary file").</span> }</p>
+            <p class="muted small">For each piece of information, choose the column that contains it. Leave it blank if this file does not have that information.</p>
+            <div class="field-legend small">
+                <span><strong>Needed</strong> flags an empty value</span>
+                <span><strong>Find duplicates</strong> identifies repeated records</span>
+                @if (!isPrimary) { <span><strong>Connect files</strong> links a row to @(Model.Primary?.Name ?? "the main list")</span> }
+            </div>
             <datalist id="headers">@foreach (var h in Model.Headers) { <option value="@h"></option> }</datalist>
             <div class="table-wrap">
             <table class="map-table">
-                <thead><tr><th>Field</th><th>Column in your file</th><th>Sample values</th><th class="center">Required</th><th class="center">Unique key</th>@if (!isPrimary) { <th class="center">Match</th> }</tr></thead>
+                <thead><tr><th>Information</th><th>Column in your file</th><th>Example values</th><th class="center">Needed</th><th class="center">Find duplicates</th>@if (!isPrimary) { <th class="center">Connect files</th> }</tr></thead>
                 <tbody>
                 @foreach (var f in Model.Def.Fields)
                 {
@@ -122,33 +132,41 @@
     <section class="card step-card">
         <div class="step-num">4</div>
         <div class="step-body">
-            <h2>Rules</h2>
+            <h2>Choose the amount and date</h2>
+            <p class="muted small">Tell Reconza which amount affects the result. The date format helps it read dates consistently.</p>
             <div class="grid grid-2">
-                <div>
-                    <div class="field"><label asp-for="AmountField">Amount to total</label>
-                        <select asp-for="AmountField"><option value="">— none —</option>@foreach (var f in numberFields) { <option value="@f.Name" selected="@(f.Name == Model.AmountField)">@f.Label</option> }</select></div>
-                    <div class="field"><label asp-for="DateFormats">Date format in this file</label><input asp-for="DateFormats" placeholder="e.g. dd/MM/yyyy" />
-                        <div class="hint">Resolves day/month ambiguity — 03/04 is 3 April with <code>dd/MM/yyyy</code>.</div></div>
-                </div>
-                @if (!isPrimary)
-                {
-                    <div>
-                        <label class="check"><input type="checkbox" name="ExpectEveryPrimaryRow" value="true" checked="@Model.ExpectEveryPrimaryRow" /><input type="hidden" name="ExpectEveryPrimaryRow" value="false" /> Flag @(Model.Primary?.Name ?? "primary") records missing from this file</label>
-                        <label class="check" style="margin-top:8px"><input type="checkbox" name="ExcludeUnmatchedFromTotals" value="true" checked="@Model.ExcludeUnmatchedFromTotals" /><input type="hidden" name="ExcludeUnmatchedFromTotals" value="false" /> Leave unmatched rows out of totals</label>
-                        <h3 style="margin-top:18px">Cross-check amounts</h3>
-                        <div class="grid grid-2">
-                            <div class="field"><label>This file</label><select asp-for="CompareField"><option value="">— off —</option>@foreach (var f in numberFields) { <option value="@f.Name" selected="@(f.Name == Model.CompareField)">@f.Label</option> }</select></div>
-                            <div class="field"><label>vs @(Model.Primary?.Name ?? "primary")</label><select asp-for="PrimaryCompareField"><option value="">— off —</option>@foreach (var f in numberFields) { <option value="@f.Name" selected="@(f.Name == Model.PrimaryCompareField)">@f.Label</option> }</select></div>
-                        </div>
-                        <div class="field"><label asp-for="CompareTolerance">Allowed difference</label><input asp-for="CompareTolerance" type="number" step="0.01" min="0" style="max-width:160px" /></div>
-                    </div>
-                }
+                <div class="field"><label asp-for="AmountField">Amount to include in totals</label>
+                    <select asp-for="AmountField"><option value="">— do not total this file —</option>@foreach (var f in numberFields) { <option value="@f.Name" selected="@(f.Name == Model.AmountField)">@f.Label</option> }</select></div>
+                <div class="field"><label asp-for="DateFormats">Date format in this file</label><input asp-for="DateFormats" placeholder="e.g. dd/MM/yyyy" />
+                    <div class="hint">For example, <code>dd/MM/yyyy</code> reads 03/04 as 3 April.</div></div>
             </div>
+            @if (!isPrimary)
+            {
+                <details class="advanced-panel nested-panel">
+                    <summary><span><strong>Advanced checks</strong><small>Missing records, unmatched totals and amount comparisons</small></span></summary>
+                    <div class="advanced-body">
+                    <div class="grid grid-2">
+                        <div>
+                            <label class="check"><input type="checkbox" name="ExpectEveryPrimaryRow" value="true" checked="@Model.ExpectEveryPrimaryRow" /><input type="hidden" name="ExpectEveryPrimaryRow" value="false" /> Flag records from @(Model.Primary?.Name ?? "the main list") that are missing here</label>
+                            <label class="check" style="margin-top:8px"><input type="checkbox" name="ExcludeUnmatchedFromTotals" value="true" checked="@Model.ExcludeUnmatchedFromTotals" /><input type="hidden" name="ExcludeUnmatchedFromTotals" value="false" /> Leave rows that cannot be connected out of totals</label>
+                        </div>
+                        <div>
+                            <h3>Compare amounts</h3>
+                            <div class="grid grid-2">
+                                <div class="field"><label>Amount in this file</label><select asp-for="CompareField"><option value="">— off —</option>@foreach (var f in numberFields) { <option value="@f.Name" selected="@(f.Name == Model.CompareField)">@f.Label</option> }</select></div>
+                                <div class="field"><label>Amount in @(Model.Primary?.Name ?? "main list")</label><select asp-for="PrimaryCompareField"><option value="">— off —</option>@foreach (var f in numberFields) { <option value="@f.Name" selected="@(f.Name == Model.PrimaryCompareField)">@f.Label</option> }</select></div>
+                            </div>
+                            <div class="field"><label asp-for="CompareTolerance">Difference allowed before flagging</label><input asp-for="CompareTolerance" type="number" step="0.01" min="0" style="max-width:160px" /></div>
+                        </div>
+                    </div>
+                    </div>
+                </details>
+            }
         </div>
     </section>
 
     <div class="sticky-actions">
         <a class="btn btn-secondary" asp-page="Edit" asp-route-id="@Model.Workflow.Id">Cancel</a>
-        <button class="btn" type="submit" asp-page-handler="Save" data-busy="Saving…">Save mapping &amp; rules</button>
+        <button class="btn" type="submit" asp-page-handler="Save" data-busy="Saving…">Save file setup</button>
     </div>
 </form>

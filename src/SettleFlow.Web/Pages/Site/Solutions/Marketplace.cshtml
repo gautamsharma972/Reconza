@@ -2,9 +2,9 @@
 @{
     var faq = new (string Q, string A)[]
     {
-        ("Which marketplaces does it support?", "Any marketplace that gives you a settlement or payment report as Excel or CSV. You map the columns once per report format; Reconza handles the rest."),
+        ("Which marketplaces does it support?", "Reconza works from Excel or CSV exports rather than a direct marketplace connection. If a marketplace gives you order, payout and fee reports with stable identifiers, you can set up how those files should be checked and reuse it."),
         ("Can it handle fees that come in a separate report?", "Yes. Order exports, settlement reports and fee or commission reports are separate sources. Fees are matched to orders and subtracted to give net receipts per channel."),
-        ("What about partial payments and returns?", "Amounts are compared per order with a tolerance you set, so short payments are flagged with the exact difference. Orders missing from the settlement report are listed separately."),
+        ("What about partial payments and returns?", "Amounts can be compared per order with an allowed difference, so short payments are shown with the exact gap. Orders missing from the payout report are listed separately. Return-specific calculations still depend on the fields available in your reports."),
     };
 }
 @section Head {
@@ -13,22 +13,39 @@
 }
 <section class="page-hero">
     <span class="badge badge-brand">For D2C brands &amp; online sellers</span>
-    <h1>Marketplace payout reconciliation: know every order was paid</h1>
-    <p>Match your order export against marketplace settlement and fee reports. Find unpaid orders, short payments and surprise fees — in minutes, every payout cycle.</p>
-    <div class="row" style="justify-content:center"><a class="btn btn-lg" href="/Account/Register">Start free trial</a><a class="btn btn-lg btn-secondary" href="/guides/marketplace-settlement-reconciliation">Read the guide</a></div>
+    <h1>Check every order against marketplace payouts and fees</h1>
+    <p>Upload your order, payout and fee reports. Reconza shows orders that are unpaid, paid short, duplicated or linked to unexpected charges.</p>
+    <div class="row" style="justify-content:center"><a class="btn btn-lg" href="/Account/Register">Create free account</a><a class="btn btn-lg btn-secondary" href="/guides/marketplace-settlement-reconciliation">Read the guide</a></div>
+    <p class="hero-note">Works from marketplace Excel and CSV exports · No direct store connection required</p>
 </section>
-<div class="prose section">
-    <h2>Why payouts are hard to check</h2>
-    <p>Marketplaces pay in batches that don't line up with your orders: one payout covers dozens of orders, fees arrive in another report, and order IDs are formatted differently between your store export and their settlement file. Checking it by hand means long VLOOKUP chains that break whenever a report format changes.</p>
-    <h2>How Reconza does it</h2>
-    <ul>
-        <li><strong>Orders</strong> from your store or OMS are the system of record.</li>
-        <li><strong>The settlement report</strong> is matched order-by-order; the paid amount is compared to the order value with your tolerance.</li>
-        <li><strong>Fee and commission reports</strong> are matched to orders and subtracted, giving net receipts per marketplace.</li>
-        <li>Orders with <strong>no payout</strong>, payouts for <strong>unknown orders</strong>, and <strong>duplicate</strong> lines are listed for review.</li>
-    </ul>
-    <p>The result is a reconciliation workbook you can hand to your accountant, plus a running record of every exception you raised with the marketplace.</p>
-</div>
+
+<section class="section solution-flow">
+    <div class="section-heading"><span class="eyebrow">Follow the money</span><h2 class="section-title">See how each order reaches the final payout</h2></div>
+    <div class="flow-line flow-four" aria-label="Orders are compared with payouts and fees to calculate net receipts">
+        <div><strong>Orders</strong><span>What customers bought</span></div><b aria-hidden="true">→</b>
+        <div><strong>Payouts</strong><span>What the marketplace paid</span></div><b aria-hidden="true">−</b>
+        <div><strong>Fees</strong><span>What was deducted</span></div><b aria-hidden="true">→</b>
+        <div class="flow-result"><strong>Net receipts</strong><span>With issues listed</span></div>
+    </div>
+</section>
+
+<section class="section grid grid-2 solution-detail">
+    <div>
+        <span class="eyebrow">Why differences happen</span>
+        <h2>Payout batches rarely line up neatly with orders</h2>
+        <p>One payout can cover many orders, fees can arrive in another report, and the same order ID may be written differently in each export. Manual lookups become difficult to repeat and even harder to explain later.</p>
+        <p><a href="/guides/marketplace-settlement-reconciliation">Learn the full checking method →</a></p>
+    </div>
+    <div class="card">
+        <h3>Reconza highlights</h3>
+        <ul class="checks"><li>Orders with no matching payout</li><li>Payments that differ from the order amount</li><li>Unknown or repeated payout rows</li><li>Fees that cannot be connected to an order</li></ul>
+    </div>
+</section>
+
+<section class="section trust-panel grid grid-2">
+    <div><span class="eyebrow">What you receive</span><h2>A report your accountant can follow</h2><p>Download an Excel workbook with totals by marketplace, the records that need review and a cleaned copy of each source. Reconza also keeps a history of the decisions your team made.</p></div>
+    <ul class="checks"><li>Gross order value and marketplace fees</li><li>Net receipts by channel</li><li>Missing and short-paid order lists</li><li>Source rows behind every issue</li></ul>
+</section>
 <section class="section faq">
     <h2 class="section-title">Questions sellers ask</h2>
     @foreach (var (q, a) in faq) { <details><summary>@q</summary><p>@a</p></details> }

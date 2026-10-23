@@ -14,8 +14,9 @@ using SettleFlow.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 // Server-specific settings and secrets (see appsettings.Server.example.json). Lives only on the server, so
-// uploading a new release never overwrites it. Environment variables still take precedence.
-builder.Configuration.AddJsonFile("appsettings.Server.json", optional: true, reloadOnChange: false);
+// uploading a new release never overwrites it. Tests must never load a developer's or server's real credentials.
+if (!builder.Environment.IsEnvironment("Testing"))
+    builder.Configuration.AddJsonFile("appsettings.Server.json", optional: true, reloadOnChange: false);
 builder.Configuration.AddEnvironmentVariables();
 var config = builder.Configuration;
 var isProd = builder.Environment.IsProduction();
@@ -75,6 +76,7 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(o =>
         o.Password.RequiredLength = 10;
         o.Password.RequireNonAlphanumeric = false;
         o.User.RequireUniqueEmail = true;
+        o.SignIn.RequireConfirmedEmail = true;
         o.Lockout.MaxFailedAccessAttempts = 5;
         o.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     })
@@ -140,7 +142,10 @@ builder.Services.AddSingleton(appOptions);
 builder.Services.AddSingleton<AppUrls>();
 var seoOptions = Bind<SeoOptions>("Seo");
 builder.Services.AddSingleton(seoOptions);
-builder.Services.AddSingleton(Bind<EmailOptions>("Email"));
+var emailOptions = Bind<EmailOptions>("Email");
+if (isProd && emailOptions.ProductionErrors().ToList() is { Count: > 0 } emailErrors)
+    throw new InvalidOperationException("Fix the production email configuration: " + string.Join(" ", emailErrors));
+builder.Services.AddSingleton(emailOptions);
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
 builder.Services.AddSingleton(Bind<OllamaOptions>("Ollama"));
 builder.Services.AddHttpClient<HybridMappingSuggester>(c => c.Timeout = TimeSpan.FromMinutes(2));
@@ -360,7 +365,7 @@ app.MapGet("/llms.txt", (AppUrls urls) => Results.Text(
     + "It reconciles the Excel and CSV files a business already receives (trip registers, fuel card statements, deductions, "
     + "customer shipment reports, marketplace settlement and fee reports), flags duplicates, missing records and amount "
     + "mismatches with deterministic rules, and produces a settlement workbook and per-driver statements. Plans start at "
-    + "₹999/month (US$19 outside India) with a free trial.\n\n## Pages\n\n"
+    + "₹999/month (US$19 outside India) with a permanent free plan.\n\n## Pages\n\n"
     + string.Join("\n", Seo.Pages.Select(p => $"- [{p.Title}]({urls.Absolute(p.Path)}): {p.Description}"))
     + $"\n\n## Free resources\n\n- [Driver settlement Excel template]({urls.Absolute(Seo.TemplatePath)})\n",
     "text/plain; charset=utf-8"));

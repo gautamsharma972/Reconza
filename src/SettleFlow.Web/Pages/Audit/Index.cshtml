@@ -1,8 +1,8 @@
 @page
 @model SettleFlow.Web.Pages.Audit.IndexModel
-@{ ViewData["Title"] = "Audit log"; }
-<div class="page-head"><div><h1>Audit log</h1><div class="muted">Append-only record of who changed, ran, reviewed or downloaded what.</div></div>
-    <input data-filter="#audit" placeholder="Filter…" style="max-width:260px" /></div>
+@{ ViewData["Title"] = "Activity"; }
+<div class="page-head"><div><h1>Activity</h1><div class="muted">A permanent record of who changed, checked, reviewed or downloaded what.</div></div>
+    <input type="search" data-filter="#audit" aria-label="Filter activity" placeholder="Filter activity…" style="max-width:260px" /></div>
 <div class="card card-tight">
     <div class="table-wrap">
     <table id="audit">
@@ -16,7 +16,7 @@
                 <td><span class="badge">@e.Action</span></td>
                 <td class="small">@e.Details
                     @if (e.EntityId is not null && (e.Action.StartsWith("run") || e.Action.StartsWith("exception") || e.Action.StartsWith("report")))
-                    { <a asp-page="/Runs/Details" asp-route-id="@e.EntityId">view run</a> }</td>
+                    { <a asp-page="/Runs/Details" asp-route-id="@e.EntityId">view check</a> }</td>
             </tr>
         }
         </tbody>

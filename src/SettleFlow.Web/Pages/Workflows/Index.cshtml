@@ -1,31 +1,32 @@
 @page
 @model SettleFlow.Web.Pages.Workflows.IndexModel
 @using SettleFlow.Core.Presets
-@{ ViewData["Title"] = "Workflows"; }
+@{ ViewData["Title"] = "Saved checks"; }
 <div class="page-head">
-    <div><h1>Workflows</h1><div class="muted">A workflow is a saved recipe: which files come in, how columns map, how records reconcile, and what the report looks like.</div></div>
+    <div><h1>Saved checks</h1><div class="muted">Save how your files and columns fit together, then reuse the same check every week or month.</div></div>
 </div>
 <div class="grid grid-2" style="align-items:start">
     <div class="card card-tight">
-        <div class="card-head"><h2 style="margin:0">Saved workflows</h2><span class="muted small">@Model.Workflows.Count of @Model.Limits.Workflows</span></div>
+        <div class="card-head"><h2 style="margin:0">Your saved checks</h2><span class="muted small">@Model.Workflows.Count of @Model.Limits.Workflows</span></div>
         @if (Model.Workflows.Count == 0)
         {
-            <div class="empty">None yet — create one from a template.</div>
+            <div class="empty"><div class="empty-icon">＋</div><strong>No saved checks yet</strong><div class="muted small">Choose a starting point to set up your first recurring file check.</div><a class="btn btn-sm" href="#create-check">Create your first check</a></div>
         }
         else
         {
-            <table>
-                <thead><tr><th>Name</th><th>Runs</th><th>Last run</th><th></th></tr></thead>
+            <div class="table-wrap">
+            <table class="responsive-table saved-checks-table">
+                <thead><tr><th>Name</th><th>Checks</th><th>Last checked</th><th></th></tr></thead>
                 <tbody>
                 @foreach (var w in Model.Workflows)
                 {
                     var s = Model.RunStats.GetValueOrDefault(w.Id);
                     <tr>
-                        <td><a asp-page="Edit" asp-route-id="@w.Id">@w.Name</a></td>
-                        <td>@s.Runs</td>
-                        <td class="muted small">@(s.Last?.ToString("dd MMM yyyy") ?? "—")</td>
-                        <td class="right">
-                            <a class="btn btn-sm" asp-page="/Runs/New" asp-route-workflowId="@w.Id">Run</a>
+                        <td data-label="Saved check"><a asp-page="Edit" asp-route-id="@w.Id"><strong>@w.Name</strong></a></td>
+                        <td data-label="Previous checks">@s.Runs</td>
+                        <td data-label="Last checked" class="muted small">@(s.Last?.ToString("dd MMM yyyy") ?? "Not used yet")</td>
+                        <td data-label="Actions" class="right saved-check-actions">
+                            <a class="btn btn-sm" asp-page="/Runs/New" asp-route-workflowId="@w.Id">Check files</a>
                             <form method="post" asp-page-handler="Delete" asp-route-id="@w.Id" class="inline-form">
                                 <button class="btn btn-sm btn-danger" data-confirm="Delete '@w.Name'? Past runs and reports are kept.">Delete</button>
                             </form>
@@ -34,22 +35,29 @@
                 }
                 </tbody>
             </table>
+            </div>
         }
     </div>
-    <div class="card">
-        <h2>New workflow</h2>
+    <div class="card" id="create-check">
+        <h2>Create a saved check</h2>
         <div asp-validation-summary="All" class="alert alert-bad" style="@(ViewData.ModelState.IsValid ? "display:none" : "")"></div>
+        @if (Model.Workflows.Count >= Model.Limits.Workflows)
+        {
+            <div class="alert alert-warn"><strong>You've reached the @Model.Limits.Name plan limit.</strong> Delete a saved check you no longer use or <a asp-page="/Billing/Index">choose a plan with more saved checks</a>.</div>
+        }
         <form method="post" asp-page-handler="Create">
-            <div class="field"><label asp-for="Name">Name</label><input asp-for="Name" placeholder="e.g. Weekly driver pay — West region" /></div>
-            <label>Start from</label>
-            @foreach (var p in WorkflowPresets.All)
-            {
-                <label class="card" style="display:block; padding:12px 14px; margin:0 0 8px; cursor:pointer; font-weight:400">
-                    <span class="check"><input type="radio" name="Preset" value="@p.Key" checked="@(p.Key == Model.Preset)" /> <strong>@p.Name</strong></span>
-                    <span class="muted small" style="display:block; margin:4px 0 0 22px">@p.Description</span>
-                </label>
-            }
-            <button class="btn" type="submit" style="margin-top:6px">Create workflow</button>
+            <div class="field"><label asp-for="Name">What should we call it?</label><input asp-for="Name" placeholder="e.g. Weekly driver payments — West region" autocomplete="off" /><span asp-validation-for="Name" class="field-error"></span></div>
+            <fieldset class="preset-picker">
+                <legend>What do you want to check?</legend>
+                @foreach (var p in WorkflowPresets.All)
+                {
+                    <label class="preset-option">
+                        <input type="radio" name="Preset" value="@p.Key" checked="@(p.Key == Model.Preset)" />
+                        <span><strong>@p.Name</strong><small>@p.Description</small></span>
+                    </label>
+                }
+            </fieldset>
+            <button class="btn" type="submit" style="margin-top:6px" disabled="@(Model.Workflows.Count >= Model.Limits.Workflows)">Continue setup</button>
         </form>
     </div>
 </div>

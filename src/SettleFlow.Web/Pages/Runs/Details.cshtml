@@ -8,17 +8,31 @@
     var open = Model.Exceptions.Count(e => e.Status == ExceptionStatus.Open);
     var reviewed = Model.Exceptions.Count - open;
     var active = r.Status is RunStatus.Queued or RunStatus.Processing;
+    string RoleLabel(SourceRole role) => role switch
+    {
+        SourceRole.Primary => "Main list",
+        SourceRole.Deduction => "Subtracts",
+        SourceRole.Addition => "Adds",
+        _ => "Check only"
+    };
+    string DecisionLabel(ExceptionStatus status) => status switch
+    {
+        ExceptionStatus.Open => "To review",
+        ExceptionStatus.Accepted => "Keep as is",
+        ExceptionStatus.Resolved => "Fixed",
+        _ => status.ToString()
+    };
 }
 <div class="page-head">
     <div>
-        <div class="crumbs"><a asp-page="Index">Runs</a> / <a asp-page="/Workflows/Edit" asp-route-id="@r.WorkflowId">@r.WorkflowName</a></div>
+        <div class="crumbs"><a asp-page="Index">Check history</a> / <a asp-page="/Workflows/Edit" asp-route-id="@r.WorkflowId">@r.WorkflowName</a></div>
         <h1>@r.Label</h1>
         <div class="muted small">Started by @r.CreatedBy · @r.CreatedAt.ToString("dd MMM yyyy, HH:mm") UTC
             @if (r.Status == RunStatus.Completed) { <span>· @r.RowsProcessed.ToString("N0") rows in @((r.DurationMs / 1000.0).ToString("0.0")) s</span> }</div>
     </div>
     <div class="row">
-        @if (r.ReportStorageKey is not null) { <a class="btn" asp-page-handler="Download" asp-route-id="@r.Id">⤓ Download settlement (.xlsx)</a> }
-        @if (!active) { <a class="btn btn-secondary" asp-page="New" asp-route-workflowId="@r.WorkflowId">Run again</a> }
+        @if (r.ReportStorageKey is not null) { <a class="btn" asp-page-handler="Download" asp-route-id="@r.Id">⤓ Download report (.xlsx)</a> }
+        @if (!active) { <a class="btn btn-secondary" asp-page="New" asp-route-workflowId="@r.WorkflowId">Check new files</a> }
     </div>
 </div>
 
@@ -27,9 +41,9 @@
     <section class="card progress-card" data-run-progress data-status-url="@Url.Page("Details", "Status", new { id = r.Id })">
         <div class="spinner" aria-hidden="true"></div>
         <div style="flex:1">
-            <h2 data-stage>@(r.Status == RunStatus.Queued ? (Model.QueuePosition > 1 ? $"Queued — {Model.QueuePosition - 1} run(s) ahead" : "Starting…") : r.Stage)</h2>
+            <h2 data-stage>@(r.Status == RunStatus.Queued ? (Model.QueuePosition > 1 ? $"Queued — {Model.QueuePosition - 1} check(s) ahead" : "Starting…") : r.Stage)</h2>
             <div class="progress"><div class="progress-bar" data-bar style="width:@(Math.Max(r.Progress, 3))%"></div></div>
-            <p class="muted small" style="margin:10px 0 0">Your files are uploaded, scanned and encrypted. Processing runs in the background — it's safe to leave this page; the run will be waiting in <a asp-page="Index">Runs</a>.</p>
+            <p class="muted small" style="margin:10px 0 0">Your files are uploaded, scanned and encrypted. Checking continues in the background, so it is safe to leave this page. Your result will be waiting in <a asp-page="Index">History</a>.</p>
         </div>
     </section>
     <div class="card card-tight">
@@ -39,7 +53,7 @@
 }
 else if (r.Status == RunStatus.Failed)
 {
-    <div class="alert alert-bad"><strong>This run failed.</strong> @r.Error</div>
+    <div class="alert alert-bad"><strong>We couldn't finish this check.</strong> @r.Error</div>
     <div class="card card-tight">
         <div class="card-head"><h2 style="margin:0">Files</h2></div>
         <partial name="_RunFiles" model="r" />
@@ -49,8 +63,8 @@ else
 {
     <div class="grid grid-4" style="margin-bottom:20px">
         <div class="stat stat-hero"><div class="stat-label">@tpl.NetLabel</div><div class="stat-value">@r.NetTotal.ToString("N2")</div><div class="stat-sub">across @r.GroupCount @(tpl.GroupLabel.ToLower())s</div></div>
-        <div class="stat"><div class="stat-label">Rows reconciled</div><div class="stat-value">@r.RowsProcessed.ToString("N0")</div><div class="stat-sub">from @r.Files.Count files</div></div>
-        <div class="stat"><div class="stat-label">Exceptions</div><div class="stat-value">@r.ExceptionCount</div><div class="stat-sub">@Model.Exceptions.Count(e => e.ExcludedFromTotals) left out of totals</div></div>
+        <div class="stat"><div class="stat-label">Rows checked</div><div class="stat-value">@r.RowsProcessed.ToString("N0")</div><div class="stat-sub">from @r.Files.Count files</div></div>
+        <div class="stat"><div class="stat-label">Possible issues</div><div class="stat-value">@r.ExceptionCount</div><div class="stat-sub">@Model.Exceptions.Count(e => e.ExcludedFromTotals) left out of totals</div></div>
         <div class="stat"><div class="stat-label">Review progress</div><div class="stat-value @(open > 0 ? "warn-ink" : "ok-ink")" data-review-count>@(Model.Exceptions.Count == 0 ? "—" : $"{reviewed}/{Model.Exceptions.Count}")</div>
             <div class="progress progress-sm"><div class="progress-bar @(open == 0 ? "progress-ok" : "")" data-review-bar style="width:@(Model.Exceptions.Count == 0 ? 100 : reviewed * 100 / Model.Exceptions.Count)%"></div></div></div>
     </div>
@@ -59,21 +73,21 @@ else
     {
         <a class="callout" href="#exceptions" data-goto-tab="exceptions">
             <span class="callout-icon">!</span>
-            <span><strong>@open exception@(open == 1 ? "" : "s") need a decision</strong> before you pay out. Most are quick — duplicates and IDs that couldn't be matched.</span>
+            <span><strong>@open possible issue@(open == 1 ? "" : "s") need a decision</strong> before you use the result. Most are quick to review, such as duplicate rows or references that could not be connected.</span>
             <span class="callout-cta">Review →</span>
         </a>
     }
 
     <div class="tabs" role="tablist">
         <button type="button" data-tab="settlement">Settlement</button>
-        <button type="button" data-tab="exceptions">Exceptions <span class="tab-count"><span data-open-count>@open</span> open</span></button>
+        <button type="button" data-tab="exceptions">Issues to review <span class="tab-count"><span data-open-count>@open</span> open</span></button>
         <button type="button" data-tab="files">Files &amp; sources</button>
     </div>
 
     <section data-panel="settlement" class="card card-tight">
-        <div class="card-head"><div><h2 style="margin:0">@tpl.Title</h2><div class="muted small">Click a @tpl.GroupLabel.ToLower() for an itemized statement.</div></div><input type="search" data-filter="#settlement" placeholder="Find a @tpl.GroupLabel.ToLower()…" style="max-width:220px" /></div>
+        <div class="card-head"><div><h2 style="margin:0">@tpl.Title</h2><div class="muted small">Choose a @tpl.GroupLabel.ToLower() to see the records behind its total.</div></div><input type="search" data-filter="#settlement" aria-label="Search results" placeholder="Find a @tpl.GroupLabel.ToLower()…" style="max-width:220px" /></div>
         <div class="table-wrap">
-        <table id="settlement" class="clickable">
+        <table id="settlement" class="clickable responsive-table results-table">
             <thead><tr><th>@tpl.GroupLabel</th>
                 @foreach (var s in money) { <th class="num">@tpl.SourceLabels.GetValueOrDefault(s.Name, s.Name)@(s.Role == SourceRole.Deduction ? " (−)" : "")</th> }
                 <th class="num">@tpl.NetLabel</th><th class="num">Issues</th><th></th></tr></thead>
@@ -82,14 +96,14 @@ else
             {
                 var url = Url.Page("Statement", new { id = r.Id, group = l.Group });
                 <tr data-href="@url">
-                    <td><a href="@url"><strong>@l.Group</strong></a></td>
+                    <td data-label="@tpl.GroupLabel"><a href="@url"><strong>@l.Group</strong></a></td>
                     @foreach (var s in money)
                     {
-                        <td class="num">@l.SourceTotals.GetValueOrDefault(s.Name).ToString("N2") <span class="muted small">×@l.SourceCounts.GetValueOrDefault(s.Name)</span></td>
+                        <td class="num" data-label="@tpl.SourceLabels.GetValueOrDefault(s.Name, s.Name)">@l.SourceTotals.GetValueOrDefault(s.Name).ToString("N2") <span class="muted small">×@l.SourceCounts.GetValueOrDefault(s.Name)</span></td>
                     }
-                    <td class="num @(l.Net < 0 ? "neg" : "")"><strong>@l.Net.ToString("N2")</strong></td>
-                    <td class="num">@if (l.ExceptionCount > 0) { <span class="badge badge-warn">@l.ExceptionCount</span> }</td>
-                    <td class="right muted">›</td>
+                    <td class="num @(l.Net < 0 ? "neg" : "")" data-label="@tpl.NetLabel"><strong>@l.Net.ToString("N2")</strong></td>
+                    <td class="num" data-label="Issues">@if (l.ExceptionCount > 0) { <span class="badge badge-warn">@l.ExceptionCount</span> }</td>
+                    <td class="right muted result-arrow" aria-hidden="true">›</td>
                 </tr>
             }
             </tbody>
@@ -103,14 +117,14 @@ else
     <section data-panel="exceptions" class="card card-tight" hidden>
         @if (Model.Exceptions.Count == 0)
         {
-            <div class="empty"><div class="empty-icon">✓</div><strong>Everything reconciled cleanly.</strong><div class="muted">No duplicates, gaps or mismatches in this run.</div></div>
+            <div class="empty"><div class="empty-icon">✓</div><strong>No issues found.</strong><div class="muted">We found no duplicate rows, missing records or amount differences in this check.</div></div>
         }
         else
         {
-            <div class="card-head"><h2 style="margin:0">Exceptions</h2><input type="search" data-filter="#exceptions" placeholder="Search reference, message…" style="max-width:260px" /></div>
+            <div class="card-head"><h2 style="margin:0">Issues to review</h2><input type="search" data-filter="#exceptions" aria-label="Search issues" placeholder="Search reference, message…" style="max-width:260px" /></div>
             <div class="chips">
                 <button type="button" class="chip active" data-type-filter="*">All <b>@Model.Exceptions.Count</b></button>
-                <button type="button" class="chip" data-status-filter="Open">Open only <b data-open-count>@open</b></button>
+                <button type="button" class="chip" data-status-filter="Open">To review <b data-open-count>@open</b></button>
                 @foreach (var g in Model.Exceptions.GroupBy(e => e.Type).OrderByDescending(g => g.Count()))
                 {
                     var h = ExceptionHelp.For(g.Key);
@@ -127,36 +141,36 @@ else
                     {
                         <form method="post" asp-page-handler="AcceptType" asp-route-id="@r.Id" class="inline-form">
                             <input type="hidden" name="type" value="@g.Key" />
-                            <button class="btn btn-sm btn-secondary" data-confirm="Mark all @openOfType open '@h.Title' exceptions as accepted?">Accept all @openOfType</button>
+                            <button class="btn btn-sm btn-secondary" data-confirm="Mark all @openOfType '@h.Title' issues as okay to keep?">Keep all @openOfType as is</button>
                         </form>
                     }
                 </div>
             }
             <div class="table-wrap">
-            <table id="exceptions">
+            <table id="exceptions" class="responsive-table issues-table">
                 <thead><tr><th>Issue</th><th>Where</th><th>Details</th><th class="num">Amount</th><th>Decision</th></tr></thead>
                 <tbody>
                 @foreach (var e in Model.Exceptions)
                 {
                     var h = ExceptionHelp.For(e.Type);
                     <tr data-type="@e.Type" data-status="@e.Status" class="@(e.Status != ExceptionStatus.Open ? "is-reviewed" : "")">
-                        <td><span class="badge badge-@h.Tone" title="@h.Meaning">@h.Title</span>@if (e.ExcludedFromTotals) { <div class="muted small">not in totals</div> }</td>
-                        <td class="small"><strong>@e.Source</strong><div class="muted">@(e.RowNumber is { } rn ? $"row {rn}" : "whole file") @if (!string.IsNullOrEmpty(e.Key)) { <span class="mono">· @e.Key</span> }</div></td>
-                        <td class="small" style="max-width:420px">@e.Message</td>
-                        <td class="num">@(e.Amount?.ToString("N2") ?? "")</td>
-                        <td style="min-width:270px">
+                        <td data-label="Issue"><span class="badge badge-@h.Tone" title="@h.Meaning">@h.Title</span>@if (e.ExcludedFromTotals) { <div class="muted small">not in totals</div> }</td>
+                        <td class="small" data-label="Where"><strong>@e.Source</strong><div class="muted">@(e.RowNumber is { } rn ? $"row {rn}" : "whole file") @if (!string.IsNullOrEmpty(e.Key)) { <span class="mono">· @e.Key</span> }</div></td>
+                        <td class="small" data-label="Details" style="max-width:420px">@e.Message</td>
+                        <td class="num" data-label="Amount">@(e.Amount?.ToString("N2") ?? "")</td>
+                        <td data-label="Decision" style="min-width:270px">
                             <form method="post" asp-page-handler="Review" asp-route-id="@r.Id" class="review-form" data-review>
                                 <input type="hidden" name="exceptionId" value="@e.Id" />
                                 <div class="seg">
                                     @foreach (var st in Enum.GetValues<ExceptionStatus>())
                                     {
-                                        <label class="seg-opt seg-@st"><input type="radio" name="status" value="@st" checked="@(st == e.Status)" /><span>@st</span></label>
+                                        <label class="seg-opt seg-@st"><input type="radio" name="status" value="@st" checked="@(st == e.Status)" /><span>@DecisionLabel(st)</span></label>
                                     }
                                 </div>
                                 <input name="note" value="@e.Note" placeholder="Add a note…" class="note" />
                                 <noscript><button class="btn btn-sm btn-secondary" type="submit">Save</button></noscript>
                             </form>
-                            <div class="muted small review-meta" data-meta>@if (e.ReviewedBy is not null) { <span>@e.ReviewedBy · @e.ReviewedAt?.ToString("dd MMM HH:mm")</span> }</div>
+                            <div class="muted small review-meta" data-meta aria-live="polite">@if (e.ReviewedBy is not null) { <span>@e.ReviewedBy · @e.ReviewedAt?.ToString("dd MMM HH:mm")</span> }</div>
                         </td>
                     </tr>
                 }
@@ -180,7 +194,7 @@ else
             <partial name="_RunFiles" model="r" />
         </div>
         <div class="card card-tight">
-            <div class="card-head"><h2 style="margin:0">Per-source results</h2><span class="muted small">Workflow version as of this run</span></div>
+            <div class="card-head"><h2 style="margin:0">Results by file</h2><span class="muted small">Uses the setup saved when this check started</span></div>
             <div class="table-wrap">
             <table>
                 <thead><tr><th>Source</th><th>Role</th><th class="num">Rows read</th><th class="num">Included</th><th class="num">Left out</th><th class="num">Total</th></tr></thead>
@@ -188,7 +202,7 @@ else
                 @foreach (var s in Model.Def.Sources)
                 {
                     var st = Model.Summary.Stats.GetValueOrDefault(s.Name);
-                    <tr><td>@s.Name</td><td><span class="badge role-badge role-@s.Role">@s.Role</span></td><td class="num">@st?.RowsRead</td><td class="num">@st?.RowsIncluded</td><td class="num">@st?.RowsExcluded</td><td class="num">@st?.Total.ToString("N2")</td></tr>
+                    <tr><td>@s.Name</td><td><span class="badge role-badge role-@s.Role">@RoleLabel(s.Role)</span></td><td class="num">@st?.RowsRead</td><td class="num">@st?.RowsIncluded</td><td class="num">@st?.RowsExcluded</td><td class="num">@st?.Total.ToString("N2")</td></tr>
                 }
                 </tbody>
             </table>

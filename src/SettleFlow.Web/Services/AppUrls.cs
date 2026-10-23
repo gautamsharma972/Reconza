@@ -47,6 +47,7 @@ public sealed class AppUrls(AppOptions options)
     private string Base => options.PublicUrl.TrimEnd('/');
     public string Absolute(string pathAndQuery) => Base + (pathAndQuery.StartsWith('/') ? pathAndQuery : "/" + pathAndQuery);
     public string Run(Guid runId) => Absolute($"/Runs/Details/{runId}");
+    public string ConfirmEmail(string userId, string token) => Absolute($"/Account/ConfirmEmail?userId={Uri.EscapeDataString(userId)}&token={Uri.EscapeDataString(token)}");
     public string ResetPassword(string userId, string token) => Absolute($"/Account/ResetPassword?userId={Uri.EscapeDataString(userId)}&token={Uri.EscapeDataString(token)}");
     public string AcceptInvite(string userId, string token) => Absolute($"/Account/AcceptInvite?userId={Uri.EscapeDataString(userId)}&token={Uri.EscapeDataString(token)}");
 }

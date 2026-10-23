@@ -2,18 +2,18 @@
     @foreach (var (plan, l) in Plans.Limits)
     {
         <div class="card plan-card @(plan == Plan.Business ? "plan-featured" : "")">
-            @if (plan == Plan.Business) { <span class="badge badge-brand plan-flag">Most popular</span> }
+            @if (plan == Plan.Business) { <span class="badge badge-brand plan-flag">Best for growing teams</span> }
             <h3>@l.Name</h3>
             <div class="price">@l.PriceIndia</div>
             <div class="muted small">@(l.PriceIntl == "Free" ? "No card needed" : l.PriceIntl + " outside India")</div>
             <ul class="plan-list">
-                <li>@l.MonthlyRows.ToString("N0") rows / month</li>
-                <li>@l.Workflows saved workflow@(l.Workflows > 1 ? "s" : "")</li>
+                <li>@l.MonthlyRows.ToString("N0") spreadsheet rows / month</li>
+                <li>@l.Workflows saved check@(l.Workflows > 1 ? "s" : "")</li>
                 <li>@l.Seats team seat@(l.Seats > 1 ? "s" : "")</li>
                 <li>Files up to @l.MaxFileMb MB</li>
-                @if (l.MonthlyRuns is { } r) { <li>@r runs / month</li> } else { <li>Unlimited runs</li> }
+                @if (l.MonthlyRuns is { } r) { <li>@r checks / month</li> } else { <li>Unlimited checks</li> }
             </ul>
-            <a class="btn @(plan == Plan.Business ? "" : "btn-secondary")" href="/Account/Register">@(plan == Plan.Trial ? "Start free" : "Start with a free trial")</a>
+            <a class="btn @(plan == Plan.Business ? "" : "btn-secondary")" href="/Account/Register">@(plan == Plan.Trial ? "Create free account" : "Start on the free plan")</a>
         </div>
     }
 </div>

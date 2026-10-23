@@ -15,7 +15,6 @@
                 <div class="hint">Runs continue in the background and are retried automatically if interrupted.</div></div>
         </div>
     </div>
-    </div>
     <form method="post" asp-page-handler="Org" class="card">
         <h2>Plan &amp; data retention</h2>
         <div class="field"><label>Plan</label>
@@ -34,14 +33,14 @@
         </div>
         <div class="field"><label asp-for="RetentionDays">Delete uploaded files and reports after (days)</label>
             <input asp-for="RetentionDays" type="number" min="1" max="3650" style="max-width:140px" disabled="@(!Model.IsOwner)" />
-            <div class="hint">Run summaries, exceptions and the audit log are kept; source files and generated workbooks are permanently deleted.</div></div>
+            <div class="hint">Check summaries, review decisions and activity history are kept; source files and generated workbooks are permanently deleted.</div></div>
         @if (Model.IsOwner) { <button class="btn" type="submit">Save</button> }
         <dl class="kv small" style="margin-top:18px">
             <dt>Max file size</dt><dd>@limits.MaxFileMb MB</dd>
             <dt>Rows / month</dt><dd>@limits.MonthlyRows.ToString("N0")</dd>
-            <dt>Saved workflows</dt><dd>@limits.Workflows</dd>
+            <dt>Saved checks</dt><dd>@limits.Workflows</dd>
             <dt>Seats</dt><dd>@limits.Seats</dd>
-            <dt>Runs / month</dt><dd>@(limits.MonthlyRuns?.ToString() ?? "Unlimited")</dd>
+            <dt>Checks / month</dt><dd>@(limits.MonthlyRuns?.ToString() ?? "Unlimited")</dd>
         </dl>
     </form>
     <div class="card">

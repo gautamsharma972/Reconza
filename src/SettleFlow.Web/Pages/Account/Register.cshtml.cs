@@ -9,7 +9,8 @@ using SettleFlow.Web.Services;
 namespace SettleFlow.Web.Pages.Account;
 
 [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
-public sealed class RegisterModel(UserManager<AppUser> users, SignInManager<AppUser> signIn, AppDbContext db, TenantContext tenant, AuditLog audit) : PageModel
+public sealed class RegisterModel(UserManager<AppUser> users, AppDbContext db, TenantContext tenant, AuditLog audit,
+    IEmailSender email, AppUrls urls, ILogger<RegisterModel> log) : PageModel
 {
     public sealed class InputModel
     {
@@ -51,8 +52,17 @@ public sealed class RegisterModel(UserManager<AppUser> users, SignInManager<AppU
         });
         if (user is null) return Page();
 
-        await signIn.SignInAsync(user, isPersistent: false);
-        TempData["Flash"] = "Welcome! Create your first workflow from a template to get started.";
-        return RedirectToPage("/Workflows/Index");
+        var token = await users.GenerateEmailConfirmationTokenAsync(user);
+        try
+        {
+            await email.SendAsync(EmailTemplates.ConfirmEmail(user.Email!, urls.ConfirmEmail(user.Id, token)));
+            TempData["Flash"] = "Account created. Check your email to confirm your address, then sign in.";
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "Registration confirmation email failed for user {UserId}", user.Id);
+            TempData["Flash"] = "Account created, but the confirmation email could not be sent. Use 'Resend confirmation email' below.";
+        }
+        return RedirectToPage("Login");
     }
 }

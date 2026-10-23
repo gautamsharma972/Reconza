@@ -18,7 +18,9 @@ public sealed class LoginModel(SignInManager<AppUser> signIn) : PageModel
         var result = await signIn.PasswordSignInAsync(Email.Trim(), Password, isPersistent: false, lockoutOnFailure: true);
         if (result.Succeeded)
             return Url.IsLocalUrl(ReturnUrl) ? LocalRedirect(ReturnUrl) : RedirectToPage("/Index");
-        Error = result.IsLockedOut ? "Too many attempts. Try again in 15 minutes." : "Email or password is incorrect.";
+        Error = result.IsLockedOut ? "Too many attempts. Try again in 15 minutes."
+            : result.IsNotAllowed ? "Confirm your email address before signing in."
+            : "Email or password is incorrect.";
         return Page();
     }
 }

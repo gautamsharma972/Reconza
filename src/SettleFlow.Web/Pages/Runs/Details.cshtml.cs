@@ -92,7 +92,7 @@ public sealed class DetailsModel(AppDbContext db, IFileStore files, RunService r
         if (Run.Status is RunStatus.Queued or RunStatus.Processing) return BadRequest();
         await runs.PurgeFilesAsync(Run, "Deleted manually.", ct);
         await db.SaveChangesAsync(ct);
-        TempData["Flash"] = "Uploaded files and the report were permanently deleted. The run summary and audit trail are kept.";
+        TempData["Flash"] = "Uploaded files and the report were permanently deleted. The check summary and activity record are kept.";
         return RedirectToPage(new { id });
     }
 }

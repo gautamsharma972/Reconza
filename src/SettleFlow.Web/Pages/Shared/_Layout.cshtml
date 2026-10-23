@@ -9,7 +9,7 @@
     var seo = Seo.For(path);
     var indexable = seo is not null && User.Identity?.IsAuthenticated != true || ViewData["Indexable"] is true;
     var title = seo?.Title ?? ViewData["Title"] as string;
-    var fullTitle = title is null ? "Reconza — reconciliation for operations teams"
+    var fullTitle = title is null ? "Reconza — compare and check business spreadsheets"
         : title.StartsWith("Reconza") ? title : $"{title} | Reconza";
     var description = ViewData["Description"] as string ?? seo?.Description ?? Seo.DefaultDescription;
     var canonical = Urls.Absolute(seo?.Path ?? path);
@@ -52,18 +52,19 @@
     @await RenderSectionAsync("Head", required: false)
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <header class="topbar no-print">
     <div class="wrap topbar-inner">
         <a class="brand" asp-page="/Index"><span class="brand-mark">⇄</span> Reconza</a>
         @if (User.Identity?.IsAuthenticated == true)
         {
-            <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" data-nav-toggle>☰</button>
+            <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="app-navigation" data-nav-toggle>☰</button>
             string Active(string p) => path.StartsWith(p, StringComparison.OrdinalIgnoreCase) ? "active" : "";
-            <nav class="nav">
+            <nav id="app-navigation" class="nav">
                 <a class="@(path == "/" ? "active" : "")" asp-page="/Index">Dashboard</a>
-                <a class="@Active("/Workflows")" asp-page="/Workflows/Index">Workflows</a>
-                <a class="@Active("/Runs")" asp-page="/Runs/Index">Runs</a>
-                <a class="@Active("/Audit")" asp-page="/Audit/Index">Audit log</a>
+                <a class="@Active("/Workflows")" asp-page="/Workflows/Index">Saved checks</a>
+                <a class="@Active("/Runs")" asp-page="/Runs/Index">History</a>
+                <a class="@Active("/Audit")" asp-page="/Audit/Index">Activity</a>
                 <a class="@Active("/Billing")" asp-page="/Billing/Index">Billing</a>
                 <a class="@Active("/Settings")" asp-page="/Settings/Index">Settings</a>
             </nav>
@@ -74,22 +75,22 @@
         }
         else
         {
-            <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" data-nav-toggle>☰</button>
-            <nav class="nav site-nav" aria-label="Main">
-                <a href="/solutions/driver-settlement-software">Driver settlement</a>
-                <a href="/solutions/marketplace-payout-reconciliation">Marketplaces</a>
-                <a href="/tools/compare-excel-files">Free tool</a>
-                <a href="/guides">Guides</a>
+            <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-navigation" data-nav-toggle>☰</button>
+            <nav id="site-navigation" class="nav site-nav" aria-label="Main">
+                <a href="/#how">How it works</a>
+                <a href="/#use-cases">Use cases</a>
+                <a href="/tools/compare-excel-files">Compare spreadsheets</a>
+                <a href="/guides">Resources</a>
                 <a href="/pricing">Pricing</a>
             </nav>
             <nav class="nav nav-right userbox">
                 <a asp-page="/Account/Login">Sign in</a>
-                <a class="btn btn-sm" asp-page="/Account/Register">Start free trial</a>
+                <a class="btn btn-sm" asp-page="/Account/Register">Create free account</a>
             </nav>
         }
     </div>
 </header>
-<main class="wrap main">
+<main id="main-content" class="wrap main" tabindex="-1">
     @if (TempData["Flash"] is string flash)
     {
         <div class="toast" role="status" data-toast>@flash <button type="button" aria-label="Dismiss" data-toast-close>×</button></div>
@@ -100,19 +101,19 @@
     <div class="wrap footer-grid">
         <div>
             <a class="brand" href="/"><span class="brand-mark">⇄</span> Reconza</a>
-            <p class="muted small" style="margin-top:10px">Reconciliation and settlement software for transporters, distributors and online sellers.</p>
+            <p class="muted small" style="margin-top:10px">A simpler way to compare business spreadsheets, find mistakes and produce checked reports.</p>
         </div>
-        <div><h4>Solutions</h4>
+        <div><h2>Solutions</h2>
             <a href="/solutions/driver-settlement-software">Driver settlement software</a>
             <a href="/solutions/marketplace-payout-reconciliation">Marketplace payout reconciliation</a>
             <a href="/solutions/excel-reconciliation-software">Excel reconciliation software</a></div>
-        <div><h4>Free resources</h4>
+        <div><h2>Tools &amp; resources</h2>
             <a href="/tools/compare-excel-files">Compare two Excel files</a>
             <a href="/guides/driver-settlement-excel-template">Driver settlement Excel template</a>
             <a href="/guides/weekly-driver-settlement-excel">Driver settlement in Excel</a>
             <a href="/guides/fuel-card-reconciliation">Fuel card reconciliation</a>
             <a href="/guides/marketplace-settlement-reconciliation">Marketplace settlement guide</a></div>
-        <div><h4>Company</h4>
+        <div><h2>Company</h2>
             <a href="/pricing">Pricing</a>
             <a href="/security">Security</a>
             <a href="/contact">Contact</a>

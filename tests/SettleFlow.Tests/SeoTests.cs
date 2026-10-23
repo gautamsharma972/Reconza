@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SettleFlow.Core.Presets;
+using SettleFlow.Web.Data;
 using SettleFlow.Web.Services;
 
 namespace SettleFlow.Tests;
@@ -127,6 +128,16 @@ public sealed partial class SeoTests : IDisposable
         Assert.StartsWith("# Reconza", llms);
         Assert.Contains("https://reconza.example/tools/compare-excel-files", llms);
         Assert.Contains("\"@type\":\"WebSite\"", await c.GetStringAsync("/"));
+    }
+
+    [Fact]
+    public async Task Permanent_free_plan_is_described_consistently()
+    {
+        Assert.Equal("Free", Plans.For(Plan.Trial).Name); // persisted enum remains backwards compatible
+        var c = _factory.CreateClient();
+        foreach (var page in Seo.Pages)
+            Assert.DoesNotContain("free trial", await c.GetStringAsync(page.Path), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("no time limit", await c.GetStringAsync("/Account/Register"), StringComparison.OrdinalIgnoreCase);
     }
 
     [GeneratedRegex("<title>(.*?)</title>")] private static partial Regex TitleRx();

@@ -24,7 +24,7 @@
     }
     <div class="row" style="justify-content:center; margin-top:20px">
         <a class="btn" href="/">Home</a>
-        @if (User.Identity?.IsAuthenticated == true) { <a class="btn btn-secondary" href="/Runs">Your runs</a> }
+        @if (User.Identity?.IsAuthenticated == true) { <a class="btn btn-secondary" href="/Runs">Check history</a> }
         else { <a class="btn btn-secondary" href="/tools/compare-excel-files">Free comparison tool</a> }
     </div>
 </div>

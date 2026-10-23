@@ -1,5 +1,5 @@
 @page
 @model SettleFlow.Web.Pages.Runs.IndexModel
-@{ ViewData["Title"] = "Runs"; }
-<div class="page-head"><div><h1>Processing history</h1><div class="muted">Every run, with the exact files and workflow version used.</div></div></div>
+@{ ViewData["Title"] = "Check history"; }
+<div class="page-head"><div><h1>Check history</h1><div class="muted">Every check, with the exact files and saved setup used.</div></div><a class="btn" asp-page="/Workflows/Index">Check new files</a></div>
 <div class="card card-tight"><partial name="_RunTable" model="Model.Runs" /></div>

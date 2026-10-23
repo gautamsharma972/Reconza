@@ -2,9 +2,9 @@
 @{
     var faq = new (string Q, string A)[]
     {
-        ("Is there a free trial?", "Yes. The Trial plan is free with no card required: 5,000 rows a month, 2 workflows and 10 runs — enough to run a few real weeks of your own data."),
+        ("Is there a free plan?", "Yes. The Free plan has no card and no time limit: 5,000 spreadsheet rows a month, 2 saved checks and 10 checks — enough to try a few real cycles with your own data."),
         ("How do I pay?", "In India, pay in rupees by UPI Autopay, cards or netbanking through Razorpay. Outside India, pay in US dollars by card through Stripe. Reconza never sees your card details."),
-        ("What counts as a row?", "Every data row in the files you upload in a run. Header and blank rows don't count. A typical weekly settlement for 30 trucks is a few hundred rows."),
+        ("What counts as a row?", "Every data row in the files you upload for a check. Headers and blank rows do not count. For example, two files with 500 records each use 1,000 rows."),
         ("Can I change or cancel my plan?", "Yes, any time from the Billing page. Cancelling keeps your paid plan until the end of the billing period; your history and reports are kept."),
         ("Are taxes included?", "Prices exclude applicable taxes such as GST."),
     };
@@ -15,20 +15,22 @@
     @JsonLd.Script(JsonLd.Software(AppUrls))
 }
 <section class="page-hero">
-    <h1>Pricing</h1>
-    <p>Start free. Upgrade when Reconza is saving you a day every week. Monthly billing, cancel any time.</p>
+    <span class="badge badge-brand">No setup fee · no annual contract</span>
+    <h1>Start free. Upgrade when the work grows.</h1>
+    <p>The free plan has no time limit and needs no card. Paid plans are billed monthly and can be cancelled at any time.</p>
 </section>
 <partial name="_PlanCards" />
+<p class="pricing-note center">Not sure how many rows you use? Add the data rows in every file you check during a month. Headers and blank rows do not count.</p>
 <section class="section">
     <h2 class="section-title">Every plan includes</h2>
     <div class="grid grid-3">
-        <ul class="checks"><li>Excel (.xlsx, .xls) and CSV uploads</li><li>Automatic column mapping</li><li>Duplicate, missing-record and mismatch detection</li></ul>
-        <ul class="checks"><li>Settlement workbook &amp; exception report</li><li>Printable statement per driver or group</li><li>Exception review with notes</li></ul>
-        <ul class="checks"><li>Full audit log</li><li>Encrypted storage, automatic deletion</li><li>Team members by email invite</li></ul>
+        <ul class="checks"><li>Excel (.xlsx, .xls) and CSV files</li><li>Suggested column matches</li><li>Missing, duplicate and incorrect amount checks</li></ul>
+        <ul class="checks"><li>Downloadable Excel results</li><li>Printable statement per driver or group</li><li>Plain-language issue review with notes</li></ul>
+        <ul class="checks"><li>Complete activity history</li><li>Encrypted storage and automatic deletion</li><li>Team invitations on eligible plans</li></ul>
     </div>
 </section>
 <section class="section faq">
     <h2 class="section-title">Billing questions</h2>
     @foreach (var (q, a) in faq) { <details><summary>@q</summary><p>@a</p></details> }
 </section>
-<partial name="_Cta" model="@("Try it on last week's files")" />
+<partial name="_Cta" model="@("See what Reconza finds in your files")" />

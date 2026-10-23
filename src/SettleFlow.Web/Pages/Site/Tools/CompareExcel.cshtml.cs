@@ -106,7 +106,7 @@ public sealed class CompareExcelModel(IMemoryCache cache, IMalwareScanner scanne
     private async Task<byte[]?> ReadAsync(IFormFile f, CancellationToken ct)
     {
         if (Error is not null) return null;
-        if (f.Length > MaxBytes) { Error = $"'{f.FileName}' is larger than 2 MB. Sign up free to reconcile files up to 50 MB."; return null; }
+        if (f.Length > MaxBytes) { Error = $"'{f.FileName}' is larger than 2 MB. Create a free account to check larger files."; return null; }
         using var ms = new MemoryStream();
         await f.CopyToAsync(ms, ct);
         var check = UploadValidator.Check(f.FileName, ms, MaxBytes);

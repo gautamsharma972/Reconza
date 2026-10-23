@@ -6,7 +6,7 @@ using MimeKit;
 
 namespace SettleFlow.Tests;
 
-/// <summary>End-to-end over HTTP: sign-up, invites and password reset, including the emails and links.</summary>
+/// <summary>End-to-end over HTTP: sign-up confirmation, invites and password reset, including the emails and links.</summary>
 public sealed partial class AccountFlowTests : IDisposable
 {
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "settleflow-e2e-" + Guid.NewGuid().ToString("N"));
@@ -55,6 +55,14 @@ public sealed partial class AccountFlowTests : IDisposable
         var owner = NewClient();
         var r = await PostFormAsync(owner, "/Account/Register", new() { ["Input.Organization"] = "Acme", ["Input.Email"] = "owner@acme.test", ["Input.Password"] = ownerPw });
         Assert.Equal(HttpStatusCode.Redirect, r.StatusCode);
+        Assert.Equal("/Account/Login", r.Headers.Location?.OriginalString);
+
+        // The owner cannot sign in until they prove control of the registration address.
+        r = await PostFormAsync(owner, "/Account/Login", new() { ["Email"] = "owner@acme.test", ["Password"] = ownerPw });
+        Assert.Contains("Confirm your email address", await r.Content.ReadAsStringAsync());
+        var confirmation = LatestEmailLink("owner@acme.test", "/Account/ConfirmEmail");
+        r = await owner.GetAsync(confirmation);
+        Assert.Equal("/Workflows", r.Headers.Location?.OriginalString);
 
         // Trial has one seat; inviting must be refused until the plan allows more.
         r = await PostFormAsync(owner, "/Settings", new() { ["MemberEmail"] = "member@acme.test" }, "/Settings?handler=AddMember");
@@ -101,6 +109,20 @@ public sealed partial class AccountFlowTests : IDisposable
         Assert.Equal(HttpStatusCode.OK, (await c.GetAsync("/readyz")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await c.PostAsync("/webhooks/stripe", new StringContent("{}"))).StatusCode);
         Assert.Equal(HttpStatusCode.Redirect, (await c.GetAsync("/Billing")).StatusCode); // requires sign-in
+    }
+
+    [Fact]
+    public async Task Confirmation_resend_does_not_reveal_accounts()
+    {
+        const string password = "OwnerPass1234";
+        var c = NewClient();
+        await PostFormAsync(c, "/Account/Register", new() { ["Input.Organization"] = "Acme", ["Input.Email"] = "owner@acme.test", ["Input.Password"] = password });
+
+        var known = await PostFormAsync(c, "/Account/ResendConfirmation", new() { ["Email"] = "owner@acme.test" });
+        var unknown = await PostFormAsync(c, "/Account/ResendConfirmation", new() { ["Email"] = "nobody@acme.test" });
+        const string message = "If an unconfirmed account exists";
+        Assert.Contains(message, await known.Content.ReadAsStringAsync());
+        Assert.Contains(message, await unknown.Content.ReadAsStringAsync());
     }
 
     [GeneratedRegex("name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"")]

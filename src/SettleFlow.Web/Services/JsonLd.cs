@@ -66,6 +66,6 @@ public static class JsonLd
             ["@type"] = "Offer", ["name"] = p.Value.Name,
             ["price"] = new string(p.Value.PriceIndia.Where(char.IsDigit).ToArray()), ["priceCurrency"] = "INR",
             ["url"] = urls.Absolute("/pricing"),
-        }).Append(new Dictionary<string, object> { ["@type"] = "Offer", ["name"] = "Free trial", ["price"] = "0", ["priceCurrency"] = "INR" }).ToArray(),
+        }).Append(new Dictionary<string, object> { ["@type"] = "Offer", ["name"] = "Free plan", ["price"] = "0", ["priceCurrency"] = "INR" }).ToArray(),
     };
 }

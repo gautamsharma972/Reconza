@@ -17,7 +17,29 @@ public sealed class EmailOptions
     public string Security { get; set; } = "StartTls";
     public string? Username { get; set; }
     public string? Password { get; set; }
+    public int TimeoutSeconds { get; set; } = 30;
     public string? PickupDirectory { get; set; }
+
+    public IEnumerable<string> ProductionErrors()
+    {
+        if (!string.Equals(Mode, "Smtp", StringComparison.OrdinalIgnoreCase))
+            yield return "Email:Mode must be Smtp.";
+        if (string.IsNullOrWhiteSpace(SmtpHost))
+            yield return "Email:SmtpHost is required.";
+        if (SmtpPort is < 1 or > 65535)
+            yield return "Email:SmtpPort must be between 1 and 65535.";
+        if (!string.Equals(Security, "StartTls", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(Security, "SslOnConnect", StringComparison.OrdinalIgnoreCase))
+            yield return "Email:Security must be StartTls or SslOnConnect.";
+        if (string.IsNullOrWhiteSpace(FromName))
+            yield return "Email:FromName is required.";
+        if (!MailboxAddress.TryParse(FromAddress, out var from) || from.Address.IndexOf('@') <= 0 || from.Address.EndsWith('@'))
+            yield return "Email:FromAddress must be a valid email address.";
+        if (string.IsNullOrWhiteSpace(Username) != string.IsNullOrWhiteSpace(Password))
+            yield return "Email:Username and Email:Password must either both be set or both be empty.";
+        if (TimeoutSeconds is < 5 or > 120)
+            yield return "Email:TimeoutSeconds must be between 5 and 120.";
+    }
 }
 
 public sealed record EmailMessage(string To, string Subject, string Html, string Text);
@@ -55,6 +77,7 @@ public sealed class EmailSender(EmailOptions options, IWebHostEnvironment env, I
         }
 
         using var smtp = new SmtpClient();
+        smtp.Timeout = checked(options.TimeoutSeconds * 1000);
         var security = options.Security.ToLowerInvariant() switch
         {
             "sslonconnect" => SecureSocketOptions.SslOnConnect,
@@ -96,6 +119,13 @@ public static class EmailTemplates
             "Accept invitation", url, "This invitation expires in 3 days. If you weren't expecting it, you can ignore this email."),
         $"{invitedBy} invited you to {orgName} on Reconza.\n\nAccept: {url}\n\nThis invitation expires in 3 days.");
 
+    public static EmailMessage ConfirmEmail(string to, string url) => new(to,
+        "Confirm your Reconza email",
+        Layout("Confirm your email",
+            "<p style=\"line-height:1.5\">Confirm this address to finish creating your Reconza account.</p>",
+            "Confirm email", url, "This link expires in 3 hours. If you didn't create this account, you can ignore this email."),
+        $"Confirm your Reconza email: {url}\n\nThis link expires in 3 hours. If you didn't create this account, ignore this email.");
+
     public static EmailMessage PasswordReset(string to, string url) => new(to,
         "Reset your Reconza password",
         Layout("Reset your password",
@@ -104,10 +134,10 @@ public static class EmailTemplates
         $"Reset your Reconza password: {url}\n\nIf you didn't ask for this, ignore this email.");
 
     public static EmailMessage RunFinished(string to, string runLabel, string workflow, bool ok, int exceptions, string url) => new(to,
-        ok ? $"Settlement ready: {runLabel}" : $"Run failed: {runLabel}",
-        Layout(ok ? "Your settlement is ready" : "A run needs attention",
-            ok ? $"<p style=\"line-height:1.5\"><strong>{E(workflow)}</strong> — {E(runLabel)} finished with {exceptions} exception(s) to review.</p>"
+        ok ? $"Report ready: {runLabel}" : $"Check needs attention: {runLabel}",
+        Layout(ok ? "Your checked report is ready" : "A check needs attention",
+            ok ? $"<p style=\"line-height:1.5\"><strong>{E(workflow)}</strong> — {E(runLabel)} finished with {exceptions} possible issue(s) to review.</p>"
                : $"<p style=\"line-height:1.5\"><strong>{E(workflow)}</strong> — {E(runLabel)} couldn't be processed.</p>",
-            ok ? "Review and download" : "See what went wrong", url, "You're receiving this because you started this run."),
-        $"{workflow} — {runLabel}: {(ok ? $"ready with {exceptions} exception(s)" : "failed")}. {url}");
+            ok ? "Review and download" : "See what went wrong", url, "You're receiving this because you started this check."),
+        $"{workflow} — {runLabel}: {(ok ? $"ready with {exceptions} possible issue(s)" : "couldn't be processed")}. {url}");
 }

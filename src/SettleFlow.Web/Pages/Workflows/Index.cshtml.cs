@@ -34,7 +34,7 @@ public sealed class IndexModel(AppDbContext db, ITenantContext tenant, AuditLog 
         var preset = WorkflowPresets.Find(Preset);
         if (preset is null) ModelState.AddModelError(nameof(Preset), "Choose a template.");
         if (Workflows.Count >= Limits.Workflows)
-            ModelState.AddModelError("", $"Your {Limits.Name} plan allows {Limits.Workflows} saved workflows. Delete one or upgrade.");
+            ModelState.AddModelError("", $"Your {Limits.Name} plan allows {Limits.Workflows} saved checks. Delete one or choose a plan with more saved checks.");
         if (!ModelState.IsValid) return Page();
 
         var wf = new Workflow { Name = Name.Trim(), PresetKey = preset!.Key, DefinitionJson = WorkflowJson.Serialize(preset.Create()) };
@@ -42,8 +42,8 @@ public sealed class IndexModel(AppDbContext db, ITenantContext tenant, AuditLog 
         audit.Record("workflow.created", $"'{wf.Name}' from template '{preset.Name}'.", wf.Id);
         await db.SaveChangesAsync();
         TempData["Flash"] = preset.Key == "blank"
-            ? "Workflow created. Add fields and sources to define it."
-            : "Workflow created from template. Review each source's column mapping against one of your real files, then run it.";
+            ? "Saved check created. Add the fields and files you want to compare."
+            : "Saved check created. Set up each file using one of your real examples, then check new files.";
         return RedirectToPage("Edit", new { id = wf.Id });
     }
 

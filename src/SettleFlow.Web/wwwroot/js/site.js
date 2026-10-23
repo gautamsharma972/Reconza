@@ -19,9 +19,17 @@ document.addEventListener('submit', e => {
 });
 
 // ---- Nav toggle (mobile) and toasts
-$('[data-nav-toggle]')?.addEventListener('click', e => {
+const navToggle = $('[data-nav-toggle]');
+navToggle?.addEventListener('click', e => {
   const open = document.body.classList.toggle('nav-open');
   e.currentTarget.setAttribute('aria-expanded', open);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.body.classList.contains('nav-open')) {
+    document.body.classList.remove('nav-open');
+    navToggle?.setAttribute('aria-expanded', 'false');
+    navToggle?.focus();
+  }
 });
 $$('[data-toast]').forEach(t => {
   const close = () => t.classList.add('toast-hide');
@@ -47,11 +55,36 @@ $$('table.clickable tbody tr[data-href]').forEach(tr => tr.addEventListener('cli
 const showTab = name => {
   const buttons = $$('[data-tab]');
   if (!buttons.some(b => b.dataset.tab === name)) name = buttons[0]?.dataset.tab;
-  buttons.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  buttons.forEach(b => {
+    const active = b.dataset.tab === name;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-selected', active);
+    b.tabIndex = active ? 0 : -1;
+  });
   $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== name);
 };
 if ($('.tabs')) {
-  $$('[data-tab]').forEach(b => b.addEventListener('click', () => { showTab(b.dataset.tab); history.replaceState(null, '', '#' + b.dataset.tab); }));
+  const tabButtons = $$('[data-tab]');
+  tabButtons.forEach((b, i) => {
+    const panel = $(`[data-panel="${b.dataset.tab}"]`);
+    const tabId = `tab-${b.dataset.tab}`;
+    const panelId = `panel-${b.dataset.tab}`;
+    b.id = tabId;
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-controls', panelId);
+    panel.id = panelId;
+    panel.setAttribute('role', 'tabpanel');
+    panel.setAttribute('aria-labelledby', tabId);
+    b.addEventListener('click', () => { showTab(b.dataset.tab); history.replaceState(null, '', '#' + b.dataset.tab); });
+    b.addEventListener('keydown', e => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+      e.preventDefault();
+      const next = e.key === 'Home' ? 0 : e.key === 'End' ? tabButtons.length - 1
+        : (i + (e.key === 'ArrowRight' ? 1 : -1) + tabButtons.length) % tabButtons.length;
+      tabButtons[next].focus();
+      tabButtons[next].click();
+    });
+  });
   showTab(location.hash.slice(1));
   $$('[data-goto-tab]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); showTab(a.dataset.gotoTab); history.replaceState(null, '', '#' + a.dataset.gotoTab); $('.tabs').scrollIntoView({ behavior: 'smooth' }); }));
 }
@@ -141,8 +174,24 @@ if (multi) {
   const slots = $$('[data-slot]');
   const status = $('[data-slot-status]');
   const submit = $('[data-submit-run]');
+  const form = multi.closest('form');
+  const uploadError = $('[data-upload-error]');
+  const maxFileBytes = Number(form?.dataset.maxFileBytes || 0);
+  const allowedExtensions = ['xlsx', 'xls', 'csv'];
   const tokens = s => s.toLowerCase().replace(/\.[a-z0-9]+$/, '').split(/[^a-z0-9]+/).filter(t => t.length > 1)
     .map(t => t.replace(/s$/, ''));
+
+  const showUploadErrors = messages => {
+    uploadError.hidden = messages.length === 0;
+    uploadError.textContent = messages.join(' ');
+  };
+  const fileProblem = file => {
+    const extension = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : '';
+    if (!allowedExtensions.includes(extension)) return `${file.name} is not an Excel or CSV file.`;
+    if (!file.size) return `${file.name} is empty.`;
+    if (maxFileBytes && file.size > maxFileBytes) return `${file.name} is larger than ${Math.round(maxFileBytes / 1024 / 1024)} MB.`;
+    return null;
+  };
 
   const setFile = (slot, file) => {
     const input = $('[data-slot-input]', slot);
@@ -174,8 +223,17 @@ if (multi) {
     return best;
   };
   const assign = files => {
-    const pending = [...files];
     const free = () => slots.filter(s => !$('[data-slot-input]', s).files.length);
+    const messages = [];
+    const valid = [...files].filter(file => {
+      const problem = fileProblem(file);
+      if (problem) messages.push(problem);
+      return !problem;
+    });
+    const available = free().length;
+    if (valid.length > available) messages.push(`Only ${available} more file${available === 1 ? '' : 's'} needed; the extra ${valid.length - available} ${valid.length - available === 1 ? 'was' : 'were'} not added.`);
+    const pending = valid.slice(0, available);
+    showUploadErrors(messages);
     // Best-scoring pairs first, then fill remaining slots in order.
     const pairs = pending.flatMap(f => slots.map(s => ({ f, s, sc: score(f, s) }))).filter(p => p.sc > 0).sort((a, b) => b.sc - a.sc);
     const used = new Set();
@@ -193,11 +251,22 @@ if (multi) {
 
   slots.forEach(slot => {
     const si = $('[data-slot-input]', slot);
-    si.addEventListener('change', () => render(slot));
+    si.addEventListener('change', () => {
+      const file = si.files[0];
+      const problem = file && fileProblem(file);
+      if (problem) { showUploadErrors([problem]); setFile(slot, null); }
+      else { showUploadErrors([]); render(slot); }
+    });
     $('[data-clear]', slot).addEventListener('click', () => setFile(slot, null));
     ['dragenter', 'dragover'].forEach(ev => slot.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); slot.classList.add('is-over'); }));
     ['dragleave', 'drop'].forEach(ev => slot.addEventListener(ev, () => slot.classList.remove('is-over')));
-    slot.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); if (e.dataTransfer.files[0]) setFile(slot, e.dataTransfer.files[0]); });
+    slot.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation();
+      const file = e.dataTransfer.files[0];
+      const problem = file && fileProblem(file);
+      if (problem) showUploadErrors([problem]);
+      else if (file) { showUploadErrors([]); setFile(slot, file); }
+    });
     render(slot);
   });
 }

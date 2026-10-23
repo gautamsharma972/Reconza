@@ -13,76 +13,96 @@
 @if (!Model.SignedIn)
 {
     <section class="hero hero-split">
-        <div>
-            <span class="badge badge-brand">For transporters, fleets, distributors &amp; online sellers</span>
-            <h1>Driver settlement &amp; reconciliation software that reads your Excel files</h1>
-            <p>Upload trip sheets, fuel card statements, deduction lists and customer reports exactly as you receive them. Reconza matches them, flags every duplicate, gap and mismatch, and hands you the settlement — in minutes instead of a day.</p>
-            <div class="row" style="margin-top:22px">
-                <a class="btn btn-lg" asp-page="/Account/Register">Start free trial</a>
-                <a class="btn btn-lg btn-secondary" href="/tools/compare-excel-files">Compare two files free</a>
+        <div class="hero-copy">
+            <span class="badge badge-brand">Works with the spreadsheets you already use</span>
+            <h1>Find what’s missing, duplicated or doesn’t add up.</h1>
+            <p>Upload your Excel or CSV files. Reconza compares them, highlights possible mistakes and creates a clear report you can review and download—without formulas or manual matching.</p>
+            <div class="row hero-actions">
+                <a class="btn btn-lg" href="/tools/compare-excel-files">Compare spreadsheets free</a>
+                <a class="btn btn-lg btn-secondary" asp-page="/Account/Register">Create free account</a>
             </div>
-            <p class="muted small" style="margin-top:12px">No card needed · Works with .xlsx, .xls and .csv · Plans from ₹999/month</p>
+            <ul class="hero-reassurance" aria-label="Key benefits">
+                <li>No card or signup for a one-off comparison</li>
+                <li>Your original files stay unchanged</li>
+                <li>Works with .xlsx, .xls and .csv</li>
+            </ul>
         </div>
-        <div class="hero-visual" aria-hidden="true">
-            <div class="mock-files">
-                <span>trips.xlsx</span><span>fuel.csv</span><span>deductions.xlsx</span><span>customer_report.xlsx</span>
+        <div class="hero-visual" role="img" aria-label="Example showing three spreadsheets checked by Reconza, with 56 matched records and five possible problems">
+            <div class="visual-label">A weekly check, made clear</div>
+            <div class="mock-files" aria-label="Input files">
+                <span>your_records.xlsx</span><span>payment_report.csv</span><span>expenses.xlsx</span>
             </div>
-            <div class="mock-arrow">↓</div>
-            <div class="mock-result">
-                <div class="mock-row mock-head"><span>Driver</span><span>Freight</span><span>Fuel</span><span>Net</span></div>
-                <div class="mock-row"><span>D001</span><span>38,930</span><span>−18,798</span><b>18,132</b></div>
-                <div class="mock-row"><span>D002</span><span>41,854</span><span>−22,847</span><b>17,957</b></div>
-                <div class="mock-row"><span>D003</span><span>29,351</span><span>−24,004</span><b>3,847</b></div>
-                <div class="mock-flags"><span class="badge badge-warn">Short-paid T-1004: −1,250</span><span class="badge badge-brand">Duplicate trip T-1007</span><span class="badge badge-warn">Fuel fill with no trip</span></div>
+            <div class="mock-arrow" aria-hidden="true">↓</div>
+            <div class="result-summary">
+                <div class="result-ready"><span aria-hidden="true">✓</span><div><strong>Check complete</strong><small>61 rows across 3 files</small></div></div>
+                <div class="result-counts">
+                    <div><strong>56</strong><span>matched</span></div>
+                    <div><strong>2</strong><span>missing</span></div>
+                    <div><strong>1</strong><span>duplicate</span></div>
+                    <div><strong>2</strong><span>amount differences</span></div>
+                </div>
+                <div class="mock-flags"><span class="badge badge-warn">Invoice INV-104 is short by ₹1,250</span><span class="badge badge-brand">Order ORD-207 appears twice</span></div>
             </div>
         </div>
     </section>
 
     <section class="section">
-        <h2 class="section-title">Sound familiar?</h2>
+        <div class="section-heading">
+            <span class="eyebrow">What it catches</span>
+            <h2 class="section-title">The spreadsheet problems that are easy to miss</h2>
+            <p>Reconza checks the repetitive details so you can focus on the records that need a decision.</p>
+        </div>
         <div class="grid grid-3">
-            <div class="card"><h3>Every file looks different</h3><p class="muted">Your TMS exports one format, the fuel card portal another, and each customer sends their own report — with different IDs for the same trip.</p></div>
-            <div class="card"><h3>Settlement day eats a whole day</h3><p class="muted">VLOOKUPs break, someone pastes over a formula, and you still find a duplicate trip after the money has gone out.</p></div>
-            <div class="card"><h3>Disputes with no paper trail</h3><p class="muted">When a driver or customer questions a number, it takes hours to trace it back to the row it came from.</p></div>
+            <div class="outcome"><span class="outcome-icon" aria-hidden="true">−</span><h3>Missing records</h3><p>See what appears in one file but not another—before an unpaid invoice, order or trip is overlooked.</p></div>
+            <div class="outcome"><span class="outcome-icon" aria-hidden="true">≠</span><h3>Wrong amounts</h3><p>Compare amounts for matching records and see the exact difference, even when the files use different layouts.</p></div>
+            <div class="outcome"><span class="outcome-icon" aria-hidden="true">×2</span><h3>Duplicates and unmatched rows</h3><p>Catch repeated entries and records that cannot be connected to the right order, driver, invoice or account.</p></div>
         </div>
     </section>
 
     <section id="how" class="section">
-        <h2 class="section-title">How it works</h2>
-        <div class="grid grid-4 steps">
-            <div class="card step"><h3>Upload</h3><p class="muted small">Drop this week's files. Reconza finds the header row and recognises which file is which.</p></div>
-            <div class="card step"><h3>Map once</h3><p class="muted small">Columns are matched automatically; you confirm once and the mapping is reused every week.</p></div>
-            <div class="card step"><h3>Review exceptions</h3><p class="muted small">Duplicates, missing records and mismatches, each explained in plain English with a suggested fix.</p></div>
-            <div class="card step"><h3>Download &amp; pay</h3><p class="muted small">Settlement workbook, per-driver statements and an audit trail of every decision.</p></div>
+        <div class="section-heading">
+            <span class="eyebrow">How it works</span>
+            <h2 class="section-title">From messy files to a checked report</h2>
         </div>
+        <div class="grid grid-3 steps">
+            <div class="card step"><h3>Upload your files</h3><p>Use the Excel and CSV reports you already receive. You do not need to reformat them first.</p></div>
+            <div class="card step"><h3>Check possible problems</h3><p>Reconza explains missing records, duplicates and amount differences in plain language.</p></div>
+            <div class="card step"><h3>Download the result</h3><p>Get a clear Excel report with the totals, issues and source rows behind every number.</p></div>
+        </div>
+        <p class="center section-action"><a href="/tools/compare-excel-files">Try it now with two files—no account needed →</a></p>
     </section>
 
-    <section class="section">
-        <h2 class="section-title">Built for these workflows</h2>
+    <section id="use-cases" class="section">
+        <div class="section-heading">
+            <span class="eyebrow">Common uses</span>
+            <h2 class="section-title">Useful anywhere two reports should agree</h2>
+            <p>Start with a ready-made setup or create a recurring check for your own business files.</p>
+        </div>
         <div class="grid grid-3">
-            <a class="card card-link" href="/solutions/driver-settlement-software"><h3>Driver settlements →</h3><p class="muted">Trips, fuel advances, tolls and deductions into one net-pay figure per driver, checked against what your customer was billed.</p></a>
-            <a class="card card-link" href="/solutions/marketplace-payout-reconciliation"><h3>Marketplace payouts →</h3><p class="muted">Match every order to the marketplace settlement and fee reports; find unpaid and short-paid orders.</p></a>
-            <a class="card card-link" href="/solutions/excel-reconciliation-software"><h3>Any multi-file reconciliation →</h3><p class="muted">Supplier statements, branch stock reports, distributor claims — define the fields and rules once.</p></a>
+            <a class="card card-link use-case" href="/solutions/driver-settlement-software"><span class="use-case-kicker">Transport &amp; fleets</span><h3>Check driver payments →</h3><p>Combine trips, fuel advances, tolls and deductions into one checked amount per driver.</p></a>
+            <a class="card card-link use-case" href="/solutions/marketplace-payout-reconciliation"><span class="use-case-kicker">Online sellers</span><h3>Check marketplace payouts →</h3><p>Match orders with settlement and fee reports to find missing or short payments.</p></a>
+            <a class="card card-link use-case" href="/solutions/excel-reconciliation-software"><span class="use-case-kicker">Finance &amp; operations</span><h3>Check any recurring reports →</h3><p>Compare supplier statements, customer payments, branch reports or distributor claims.</p></a>
         </div>
     </section>
 
-    <section class="section grid grid-2" style="align-items:center">
+    <section class="section trust-panel grid grid-2">
         <div>
-            <h2>Every number traces back to a row</h2>
-            <p class="muted">Matching and arithmetic follow fixed, tested rules — never an AI guess — so the same files always produce the same settlement. Each figure links back to the file and row it came from, and every review decision is logged with who made it and when.</p>
+            <span class="eyebrow">Results you can explain</span>
+            <h2>Every number traces back to its source</h2>
+            <p>Matching and arithmetic follow fixed, tested rules—not an AI guess. Each result links back to the file and row it came from, so you can answer questions without rebuilding the calculation.</p>
             <p><a href="/security">How we protect your files →</a></p>
         </div>
         <ul class="checks">
-            <li>IDs normalised: <code>T-1001</code> = <code>t1001</code> = <code>T 1001</code></li>
-            <li>Dates in any format, Excel serial numbers, ₹/$ text amounts</li>
-            <li>Duplicate and one-to-many matching (two fuel fills on one trip)</li>
-            <li>Amount cross-checks with your own tolerance</li>
-            <li>Macro-free, formula-injection-safe Excel output</li>
+            <li>Recognises IDs written in different ways</li>
+            <li>Handles common date and currency formats</li>
+            <li>Keeps your original files unchanged</li>
+            <li>Encrypts stored files and deletes them automatically</li>
+            <li>Records who reviewed each issue and when</li>
         </ul>
     </section>
 
     <section class="section">
-        <div class="section-head"><h2 class="section-title">Simple monthly pricing</h2><a href="/pricing">Compare plans →</a></div>
+        <div class="section-head"><div><span class="eyebrow">Simple pricing</span><h2 class="section-title">Start free, upgrade when the work grows</h2></div><a href="/pricing">Compare all plans →</a></div>
         <partial name="_PlanCards" />
     </section>
 
@@ -101,46 +121,53 @@ else
     var limits = Plans.For(Model.Org!.Plan);
     <div class="page-head">
         <div><h1>@Model.Org.Name</h1><div class="muted">@limits.Name plan</div></div>
-        <a class="btn" asp-page="/Workflows/Index">New workflow</a>
+        @if (Model.Workflows.Count == 0)
+        {
+            <a class="btn" asp-page="/Workflows/Index">Create your first check</a>
+        }
+        else
+        {
+            <a class="btn" asp-page="/Runs/New" asp-route-workflowId="@Model.Workflows[0].Id">Check new files</a>
+        }
     </div>
     @if (!(Model.HasRuns && Model.HasReviewed && Model.HasDownloaded))
     {
-        var steps = new (bool Done, string Title, string Text, string? Page, object? Route)[]
+        var steps = new (bool Done, string Title, string Text, string Action, string? Page, object? Route)[]
         {
-            (Model.Workflows.Count > 0, "Create a workflow", "Start from the driver-settlement template.", "/Workflows/Index", null),
-            (Model.HasRuns, "Run your first reconciliation", "Upload your files — or try the demo week.", Model.Workflows.Count > 0 ? "/Runs/New" : null, Model.Workflows.Count > 0 ? new { workflowId = Model.Workflows[0].Id } : null),
-            (Model.HasReviewed, "Review exceptions", "Accept or resolve what Reconza flagged.", Model.RecentRuns.Count > 0 ? "/Runs/Details" : null, Model.RecentRuns.Count > 0 ? new { id = Model.RecentRuns[0].Id } : null),
-            (Model.HasDownloaded, "Download the settlement", "Excel workbook plus per-driver statements.", Model.RecentRuns.Count > 0 ? "/Runs/Details" : null, Model.RecentRuns.Count > 0 ? new { id = Model.RecentRuns[0].Id } : null),
+            (Model.Workflows.Count > 0, "Choose what to check", "Start with driver payments, marketplace payouts or a custom setup.", "Choose a starting point", "/Workflows/Index", null),
+            (Model.HasRuns, "Check your first files", "Upload your files—or use the included demo files.", "Upload files", Model.Workflows.Count > 0 ? "/Runs/New" : null, Model.Workflows.Count > 0 ? new { workflowId = Model.Workflows[0].Id } : null),
+            (Model.HasReviewed, "Review possible problems", "Confirm or resolve what Reconza found.", "Review issues", Model.RecentRuns.Count > 0 ? "/Runs/Details" : null, Model.RecentRuns.Count > 0 ? new { id = Model.RecentRuns[0].Id } : null),
+            (Model.HasDownloaded, "Download the checked report", "Save the Excel result and any available statements.", "Open result", Model.RecentRuns.Count > 0 ? "/Runs/Details" : null, Model.RecentRuns.Count > 0 ? new { id = Model.RecentRuns[0].Id } : null),
         };
         var next = Array.FindIndex(steps, s => !s.Done);
         <section class="card onboarding">
-            <div class="card-head"><div><h2 style="margin:0">Get your first settlement out</h2><div class="muted small">@steps.Count(s => s.Done) of @steps.Length done</div></div>
-                <div class="progress" style="width:180px"><div class="progress-bar" style="width:@(steps.Count(s => s.Done) * 25)%"></div></div></div>
+            <div class="card-head"><div><h2 style="margin:0">Complete your first check</h2><div class="muted small">@steps.Count(s => s.Done) of @steps.Length done</div></div>
+                <div class="progress" style="width:180px" role="progressbar" aria-label="First check setup progress" aria-valuemin="0" aria-valuemax="4" aria-valuenow="@steps.Count(s => s.Done)"><div class="progress-bar" style="width:@(steps.Count(s => s.Done) * 25)%"></div></div></div>
             <ol class="checklist">
                 @for (var i = 0; i < steps.Length; i++)
                 {
                     var st = steps[i];
-                    <li class="@(st.Done ? "done" : i == next ? "next" : "")">
+                    <li class="@(st.Done ? "done" : i == next ? "next" : "")" aria-current="@(i == next ? "step" : null)">
                         <span class="check-dot">@(st.Done ? "✓" : (i + 1).ToString())</span>
                         <div><strong>@st.Title</strong><div class="muted small">@st.Text</div></div>
-                        @if (!st.Done && i == next && st.Page is not null) { <a class="btn btn-sm" href="@Url.Page(st.Page, st.Route)">Start</a> }
+                        @if (!st.Done && i == next && st.Page is not null) { <a class="btn btn-sm" href="@Url.Page(st.Page, st.Route)">@st.Action</a> }
                     </li>
                 }
             </ol>
         </section>
     }
     <div class="grid grid-4" style="margin-bottom:20px">
-        <div class="stat"><div class="stat-label">Workflows</div><div class="stat-value">@Model.Workflows.Count</div><div class="stat-sub">of @limits.Workflows on your plan</div></div>
-        <div class="stat"><div class="stat-label">Runs this month</div><div class="stat-value">@Model.RunsThisMonth</div><div class="stat-sub">@(limits.MonthlyRuns is { } mr ? $"of {mr} included" : "unlimited")</div></div>
-        <div class="stat"><div class="stat-label">Rows processed</div><div class="stat-value">@Model.RowsThisMonth.ToString("N0")</div><div class="stat-sub">of @limits.MonthlyRows.ToString("N0") this month</div></div>
-        <div class="stat"><div class="stat-label">Open exceptions</div><div class="stat-value @(Model.OpenExceptions > 0 ? "neg" : "")">@Model.OpenExceptions</div><div class="stat-sub">across all runs</div></div>
+        <div class="stat"><div class="stat-label">Saved checks</div><div class="stat-value">@Model.Workflows.Count</div><div class="stat-sub">of @limits.Workflows on your plan</div></div>
+        <div class="stat"><div class="stat-label">Checks this month</div><div class="stat-value">@Model.RunsThisMonth</div><div class="stat-sub">@(limits.MonthlyRuns is { } mr ? $"of {mr} included" : "unlimited")</div></div>
+        <div class="stat"><div class="stat-label">Rows checked</div><div class="stat-value">@Model.RowsThisMonth.ToString("N0")</div><div class="stat-sub">of @limits.MonthlyRows.ToString("N0") this month</div></div>
+        <div class="stat"><div class="stat-label">Issues to review</div><div class="stat-value @(Model.OpenExceptions > 0 ? "neg" : "")">@Model.OpenExceptions</div><div class="stat-sub">across all checks</div></div>
     </div>
     <div class="grid grid-2">
         <div class="card card-tight">
-            <div class="card-head"><h2 style="margin:0">Workflows</h2></div>
+            <div class="card-head"><h2 style="margin:0">Saved checks</h2></div>
             @if (Model.Workflows.Count == 0)
             {
-                <div class="empty">No workflows yet. <a asp-page="/Workflows/Index">Create one from a template</a>.</div>
+                <div class="empty">No saved checks yet. <a asp-page="/Workflows/Index">Choose a starting point</a>.</div>
             }
             else
             {
@@ -150,7 +177,7 @@ else
                     {
                         <tr>
                             <td><a asp-page="/Workflows/Edit" asp-route-id="@w.Id">@w.Name</a></td>
-                            <td class="right"><a class="btn btn-sm" asp-page="/Runs/New" asp-route-workflowId="@w.Id">Run</a></td>
+                            <td class="right"><a class="btn btn-sm" asp-page="/Runs/New" asp-route-workflowId="@w.Id">Check files</a></td>
                         </tr>
                     }
                     </tbody>
@@ -158,7 +185,7 @@ else
             }
         </div>
         <div class="card card-tight">
-            <div class="card-head"><h2 style="margin:0">Recent runs</h2><a class="small" asp-page="/Runs/Index">All runs →</a></div>
+            <div class="card-head"><h2 style="margin:0">Recent checks</h2><a class="small" asp-page="/Runs/Index">View history →</a></div>
             <partial name="_RunTable" model="Model.RecentRuns" />
         </div>
     </div>

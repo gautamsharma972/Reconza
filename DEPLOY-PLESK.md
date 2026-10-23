@@ -15,9 +15,8 @@ There are two packages. Use **one**:
 The portable package starts through IIS's shared `dotnet` runtime, matching the pool's bitness (32 or 64-bit).
 Both packages need IIS's **ASP.NET Core Module**, which the Hosting Bundle installs.
 
-It uses the **MySQL or MariaDB** database you create in Plesk, with uploaded files stored encrypted on the local disk
-in `App_Data`. If you'd rather skip database setup, set `Database.Provider` to `Sqlite` and the database becomes a
-single file in `App_Data`.
+It uses the **MySQL or MariaDB** database you create in Plesk. Accounts, checks, encrypted uploads, reports and the
+encrypted key ring are stored in that database, so an application-file update cannot erase customer data.
 
 ---
 
@@ -68,9 +67,10 @@ In `httpdocs`, copy `appsettings.Server.example.json` to **`appsettings.Server.j
 | `Database.Provider` | `MySql` |
 | `Database.AutoMigrate` | `false` (tables come from `reconza-database.sql`) |
 | `ConnectionStrings.MySql` | `Server=localhost;Port=3306;Database=<db name>;User=<db user>;Password=<password>;SslMode=Preferred;AllowPublicKeyRetrieval=true;CharSet=utf8mb4`. If the database is on another server, use `SslMode=Required` and leave out `AllowPublicKeyRetrieval`. |
+| `Storage.Provider` | Keep `Database` so encrypted uploads and reports survive application updates. |
 | `DataProtection.MasterKey` | 32 random bytes in base64 (see below). **Back it up in your password manager.** If it's lost, stored files can't be read. |
 | `Company.*` | Legal name, address, contact email, jurisdiction (city and state for the courts), effective date of your terms. These appear on the Terms, Privacy, Refund and Contact pages. |
-| `Email.*` | SMTP details for invites, password resets and notifications. Plesk's own mail server works: create a mailbox such as `no-reply@yourdomain.com` and use `mail.yourdomain.com` with port 587. |
+| `Email.*` | SMTP details for sign-up confirmations, invites, password resets and notifications. For Bytehills mail, use `smtpout.secureserver.net`, port `465`, `SslOnConnect`, and the mailbox credentials. |
 | `Billing.*` | Leave empty until you have Razorpay or Stripe keys. The Billing page then shows "contact us to upgrade". |
 
 To generate the master key in PowerShell on any Windows PC:
@@ -79,7 +79,7 @@ To generate the master key in PowerShell on any Windows PC:
 $b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)
 ```
 
-The app **refuses to start** if `PublicUrl`, `MasterKey` or the company details are missing. That stops a site
+The app **refuses to start** if `PublicUrl`, `MasterKey`, SMTP or the company details are missing. That stops a site
 with placeholder legal pages from ever going public. If you get a 500.30 error after uploading, this is the usual cause.
 
 ## 5. Start and check
@@ -122,10 +122,9 @@ with placeholder legal pages from ever going public. If you get a 500.30 error a
 
 ## Backups
 
-Back these up together, using Plesk **Backup Manager** (which includes databases):
+Back these up together, using Plesk **Backup Manager**:
 
-- the **MySQL database**, which holds accounts, workflows, runs and the encrypted key ring;
-- the **`App_Data/files`** folder, which holds the encrypted uploads and reports;
+- the **MySQL database**, which holds accounts, saved checks, history, encrypted uploads and reports, and the encrypted key ring;
 - **`appsettings.Server.json`**.
 
 The master key is in `appsettings.Server.json`. Keep a separate copy of it, because the encrypted data can't be read without it.
@@ -160,7 +159,7 @@ behaviour, ask your host to disable the idle timeout, or use an uptime monitor t
 
 - **PostgreSQL:** set `DATABASE_URL` to use PostgreSQL instead of SQLite (for multi-server hosting).
 - **S3-compatible storage:** `Storage.Provider: S3`.
-- **ClamAV virus scanning:** `Scanning.Mode: Required`, with ClamAV on a server you control.
+- **Strict ClamAV virus scanning:** `Scanning.Mode: Required`, with ClamAV on a server you control. `Optional` still performs all structural checks and records when ClamAV is unavailable.
 - **AI column suggestions:** `Ollama.Enabled: true`, with Ollama on a server you control.
 
 See `README.md` in the source repository for details.

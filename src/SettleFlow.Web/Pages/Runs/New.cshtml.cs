@@ -64,7 +64,7 @@ public sealed class NewModel(AppDbContext db, RunService runs, ITenantContext te
         if (!await LoadAsync(workflowId)) return NotFound();
         if (!SamplesAvailable) return BadRequest();
         var uploads = SampleData.DriverSettlement().Select(s => new UploadedFile(s.SourceName, s.FileName, s.Content)).ToList();
-        Label = "Demo run with sample files";
+        Label = "Demo check with sample files";
         return await EnqueueAsync(uploads, ct);
     }
 

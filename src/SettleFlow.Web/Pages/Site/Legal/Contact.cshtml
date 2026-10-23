@@ -6,20 +6,16 @@
 }
 <section class="page-hero">
     <h1>Contact us</h1>
-    <p>Questions about Reconza, a demo on your own files, billing or security — we usually reply within one working day.</p>
+    <p>Tell us what you need help with. We usually reply within one working day.</p>
 </section>
-<div class="grid grid-2 contact-grid">
-    <div class="card">
-        <h2>Email</h2>
-        <p><a class="contact-email" href="mailto:@Company.Email">@Company.Email</a></p>
-        <p class="muted small">For support, write from the email address on your Reconza account so we can find it quickly. Please don't email us passwords or full data files.</p>
-        @if (!string.IsNullOrEmpty(Company.Phone)) { <h3>Phone</h3><p>@Company.Phone</p> }
-    </div>
-    <div class="card">
-        <h2>Company</h2>
-        <p><strong>@Company.LegalName</strong><br />@Company.Address</p>
-        @if (!string.IsNullOrEmpty(Company.Gstin)) { <p class="muted small">GSTIN: @Company.Gstin</p> }
-        <p class="small"><a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refund-policy">Refunds &amp; cancellation</a> · <a href="/security">Security</a></p>
-    </div>
+<div class="grid grid-3 contact-grid">
+    <a class="card card-link contact-card" href="mailto:@Company.Email?subject=Reconza%20demo"><span class="contact-icon" aria-hidden="true">▷</span><h2>See it on your files</h2><p>Tell us what reports you check and we will help you decide whether Reconza fits.</p><strong>Request a demo →</strong></a>
+    <a class="card card-link contact-card" href="mailto:@Company.Email?subject=Reconza%20support"><span class="contact-icon" aria-hidden="true">?</span><h2>Account support</h2><p>Write from your account email so we can find your organisation quickly.</p><strong>Get help →</strong></a>
+    <a class="card card-link contact-card" href="mailto:@Company.Email?subject=Reconza%20security"><span class="contact-icon" aria-hidden="true">◇</span><h2>Security or privacy</h2><p>Ask about file handling, retention, access controls or a data request.</p><strong>Ask a question →</strong></a>
+</div>
+<div class="card company-contact">
+    <div><h2>Company details</h2><p><strong>@Company.LegalName</strong><br />@Company.Address</p>@if (!string.IsNullOrEmpty(Company.Gstin)) { <p class="muted small">GSTIN: @Company.Gstin</p> }</div>
+    <div><h2>Email</h2><p><a class="contact-email" href="mailto:@Company.Email">@Company.Email</a></p>@if (!string.IsNullOrEmpty(Company.Phone)) { <p>@Company.Phone</p> }<p class="muted small">Please do not email passwords or full data files.</p></div>
+    <p class="small company-links"><a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refund-policy">Refunds &amp; cancellation</a> · <a href="/security">Security</a></p>
 </div>
 <partial name="_Cta" model="@("Want to see it on your own files?")" />

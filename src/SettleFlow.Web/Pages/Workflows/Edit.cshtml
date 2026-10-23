@@ -1,9 +1,25 @@
 @page "{id:guid}"
 @model SettleFlow.Web.Pages.Workflows.EditModel
-@{ ViewData["Title"] = Model.Workflow.Name; }
+@{
+    ViewData["Title"] = Model.Workflow.Name;
+    string RoleLabel(SourceRole role) => role switch
+    {
+        SourceRole.Primary => "Main list",
+        SourceRole.Deduction => "Subtracts from result",
+        SourceRole.Addition => "Adds to result",
+        _ => "Used for checking"
+    };
+    string RoleHelp(SourceRole role) => role switch
+    {
+        SourceRole.Primary => "The list that other files are checked against.",
+        SourceRole.Deduction => "Amounts from this file reduce the final total.",
+        SourceRole.Addition => "Amounts from this file increase the final total.",
+        _ => "Checks records or amounts without changing the total."
+    };
+}
 <div class="page-head">
-    <div><div class="muted small"><a asp-page="Index">Workflows</a> /</div><h1>@Model.Workflow.Name</h1></div>
-    <a class="btn" asp-page="/Runs/New" asp-route-workflowId="@Model.Workflow.Id">Run this workflow →</a>
+    <div><div class="muted small"><a asp-page="Index">Saved checks</a> /</div><h1>@Model.Workflow.Name</h1></div>
+    <a class="btn" asp-page="/Runs/New" asp-route-workflowId="@Model.Workflow.Id">Check new files →</a>
 </div>
 
 <div asp-validation-summary="All" class="alert alert-bad" style="@(ViewData.ModelState.IsValid ? "display:none" : "")"></div>
@@ -12,38 +28,50 @@
     <div class="alert alert-warn"><strong>Finish setup before running:</strong><ul>@foreach (var i in Model.Issues) { <li>@i</li> }</ul></div>
 }
 
-<h2>Sources</h2>
-<p class="muted small">Each source is one file you upload per run. The <strong>Primary</strong> source is the system of record that others are matched against.</p>
+<div class="setup-intro">
+    <div><strong>1. Add the files you use</strong><span>Give each file a clear purpose.</span></div>
+    <div><strong>2. Match its columns</strong><span>Show Reconza where to find each value.</span></div>
+    <div><strong>3. Check new files</strong><span>Reuse this setup whenever you need it.</span></div>
+</div>
+
+<h2>Your files</h2>
+<p class="muted small">Add one source for every file you normally compare. Choose one main list; all other files are checked against it.</p>
 <div class="grid grid-2" style="margin-bottom:12px">
     @foreach (var s in Model.Def.Sources)
     {
         <div class="card source-card role-@s.Role">
             <div class="card-head" style="margin-bottom:8px">
-                <h3 style="margin:0">@s.Name <span class="badge">@s.Role</span></h3>
+                <h3 style="margin:0">@s.Name <span class="badge">@RoleLabel(s.Role)</span></h3>
                 <div class="row">
-                    <a class="btn btn-sm btn-secondary" asp-page="Source" asp-route-id="@Model.Workflow.Id" asp-route-source="@s.Name">Mapping &amp; rules</a>
+                    <a class="btn btn-sm btn-secondary" asp-page="Source" asp-route-id="@Model.Workflow.Id" asp-route-source="@s.Name">Set up file</a>
                     <form method="post" asp-page-handler="RemoveSource" asp-route-id="@Model.Workflow.Id" asp-route-source="@s.Name" class="inline-form">
                         <button class="btn btn-sm btn-danger" data-confirm="Remove source '@s.Name' and its mapping?">Remove</button>
                     </form>
                 </div>
             </div>
+            <p class="source-purpose muted small">@RoleHelp(s.Role)</p>
             <dl class="kv small">
-                <dt>Columns mapped</dt><dd>@(s.ColumnMap.Count == 0 ? "none" : string.Join(", ", s.ColumnMap.Select(kv => $"{kv.Value} → {Model.Def.Field(kv.Key)?.Label ?? kv.Key}")))</dd>
-                <dt>Unique key</dt><dd>@(s.KeyFields.Count == 0 ? "—" : string.Join(" + ", s.KeyFields))</dd>
-                @if (s.Role != SourceRole.Primary) { <dt>Matched on</dt><dd>@(s.MatchFields.Count == 0 ? "— (attributed by " + Model.Def.GroupByField + ")" : string.Join(" + ", s.MatchFields))</dd> }
-                <dt>Amount</dt><dd>@(s.AmountField ?? "—")</dd>
-                @if (s.CompareField is not null) { <dt>Compares</dt><dd>@s.CompareField vs primary @s.PrimaryCompareField (±@s.CompareTolerance)</dd> }
+                <dt>Columns connected</dt><dd>@(s.ColumnMap.Count == 0 ? "Not set up yet" : $"{s.ColumnMap.Count} connected")</dd>
+                <dt>Duplicate check</dt><dd>@(s.KeyFields.Count == 0 ? "Off" : string.Join(" + ", s.KeyFields))</dd>
+                @if (s.Role != SourceRole.Primary) { <dt>Connects files by</dt><dd>@(s.MatchFields.Count == 0 ? Model.Def.Field(Model.Def.GroupByField)?.Label ?? Model.Def.GroupByField : string.Join(" + ", s.MatchFields.Select(x => Model.Def.Field(x)?.Label ?? x)))</dd> }
+                <dt>Amount to total</dt><dd>@(s.AmountField is null ? "None" : Model.Def.Field(s.AmountField)?.Label ?? s.AmountField)</dd>
+                @if (s.CompareField is not null) { <dt>Amount check</dt><dd>@(Model.Def.Field(s.CompareField)?.Label ?? s.CompareField) (difference up to @s.CompareTolerance allowed)</dd> }
             </dl>
         </div>
     }
     <div class="card">
-        <h3>Add a source</h3>
+        <h3>Add another file</h3>
         <form method="post" asp-page-handler="AddSource" asp-route-id="@Model.Workflow.Id">
             <div class="field"><label asp-for="NewSourceName">Name</label><input asp-for="NewSourceName" placeholder="e.g. Toll statement" /></div>
-            <div class="field"><label asp-for="NewSourceRole">Role</label>
-                <select asp-for="NewSourceRole" asp-items="Html.GetEnumSelectList<SourceRole>()"></select>
-                <div class="hint">Deduction subtracts from the settlement, Addition adds, Reference only is used for checks.</div></div>
-            <button class="btn btn-secondary" type="submit">Add source</button>
+            <div class="field"><label asp-for="NewSourceRole">What does it do?</label>
+                <select asp-for="NewSourceRole">
+                    @foreach (var role in Enum.GetValues<SourceRole>())
+                    {
+                        <option value="@role" selected="@(role == Model.NewSourceRole)">@RoleLabel(role)</option>
+                    }
+                </select>
+                <div class="hint">You can change this later when you set up the file.</div></div>
+            <button class="btn btn-secondary" type="submit">Add file</button>
         </form>
     </div>
 </div>
@@ -51,37 +79,41 @@
 <form method="post" asp-page-handler="Save" asp-route-id="@Model.Workflow.Id">
 <div class="grid grid-2" style="align-items:start; margin-top:24px">
     <div class="card">
-        <h2>General</h2>
-        <div class="field"><label asp-for="Name">Workflow name</label><input asp-for="Name" /></div>
-        <div class="field"><label asp-for="GroupByField">Settle per</label>
+        <h2>Name and results</h2>
+        <div class="field"><label asp-for="Name">Saved check name</label><input asp-for="Name" /></div>
+        <div class="field"><label asp-for="GroupByField">Show one result for each</label>
             <select asp-for="GroupByField">
                 <option value="">— choose a field —</option>
                 @foreach (var f in Model.Def.Fields) { <option value="@f.Name" selected="@(f.Name == Model.GroupByField)">@f.Label</option> }
             </select>
-            <div class="hint">Totals are grouped by this field — e.g. one settlement line per driver.</div></div>
+            <div class="hint">For example, choose Driver to see one final total for each driver.</div></div>
     </div>
-    <div class="card">
-        <h2>Report template</h2>
+    <details class="card advanced-panel">
+        <summary><span><strong>Download report options</strong><small>Labels, number format and extra worksheets</small></span></summary>
+        <div class="advanced-body">
         <div class="grid grid-2">
             <div class="field"><label>Title</label><input name="Report.Title" value="@Model.Report.Title" /></div>
             <div class="field"><label>Group column label</label><input name="Report.GroupLabel" value="@Model.Report.GroupLabel" /></div>
             <div class="field"><label>Net column label</label><input name="Report.NetLabel" value="@Model.Report.NetLabel" /></div>
-            <div class="field"><label>Number format</label><input name="Report.CurrencyFormat" value="@Model.Report.CurrencyFormat" /><div class="hint">Excel format, e.g. <code>₹#,##,##0.00</code></div></div>
+            <div class="field"><label>Number format</label><input name="Report.CurrencyFormat" value="@Model.Report.CurrencyFormat" /><div class="hint">Excel format, for example <code>₹#,##,##0.00</code></div></div>
         </div>
         @foreach (var s in Model.Def.Sources.Where(s => s.AmountField is not null && s.Role != SourceRole.ReferenceOnly))
         {
             <div class="field"><label>Column label for @s.Name</label><input name="Report.SourceLabels[@s.Name]" value="@Model.Report.SourceLabels.GetValueOrDefault(s.Name)" placeholder="@s.Name" /></div>
         }
-        <label class="check"><input type="checkbox" name="Report.IncludeExceptionsSheet" value="true" checked="@Model.Report.IncludeExceptionsSheet" /><input type="hidden" name="Report.IncludeExceptionsSheet" value="false" /> Include exceptions sheet</label>
-        <label class="check"><input type="checkbox" name="Report.IncludeDetailSheets" value="true" checked="@Model.Report.IncludeDetailSheets" /><input type="hidden" name="Report.IncludeDetailSheets" value="false" /> Include normalized detail sheet per source</label>
-    </div>
+        <label class="check"><input type="checkbox" name="Report.IncludeExceptionsSheet" value="true" checked="@Model.Report.IncludeExceptionsSheet" /><input type="hidden" name="Report.IncludeExceptionsSheet" value="false" /> Include an issues worksheet</label>
+        <label class="check"><input type="checkbox" name="Report.IncludeDetailSheets" value="true" checked="@Model.Report.IncludeDetailSheets" /><input type="hidden" name="Report.IncludeDetailSheets" value="false" /> Include a cleaned-data worksheet for each file</label>
+        </div>
+    </details>
 </div>
 
-<div class="card card-tight" style="margin-top:16px">
-    <div class="card-head"><h2 style="margin:0">Fields</h2><span class="muted small">The canonical columns every source maps onto. Synonyms improve automatic mapping.</span></div>
+<details class="card card-tight advanced-panel" style="margin-top:16px">
+    <summary><span><strong>Advanced: shared fields</strong><small>Change the information available across all files</small></span></summary>
+    <div class="advanced-body">
+    <p class="muted small">These are the common pieces of information Reconza looks for in your files. Alternative header names help it suggest columns automatically.</p>
     <div class="table-wrap">
     <table>
-        <thead><tr><th>Name</th><th>Label</th><th>Type</th><th>Header synonyms (comma-separated)</th><th>Remove</th></tr></thead>
+        <thead><tr><th>Internal name</th><th>Label shown</th><th>Value type</th><th>Other column names (comma-separated)</th><th>Remove</th></tr></thead>
         <tbody>
         @for (var i = 0; i < Model.Fields.Count; i++)
         {
@@ -101,6 +133,7 @@
         </tbody>
     </table>
     </div>
-</div>
-<div style="margin-top:16px"><button class="btn" type="submit">Save changes</button></div>
+    </div>
+</details>
+<div style="margin-top:16px"><button class="btn" type="submit">Save setup</button></div>
 </form>

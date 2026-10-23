@@ -1,0 +1,8 @@
+@page
+@model SettleFlow.Web.Pages.Account.ConfirmEmailModel
+@{ ViewData["Title"] = "Confirm your email"; }
+<div class="form-narrow card">
+    <h1>Confirmation link expired</h1>
+    <p class="muted">This link is invalid, already used, or older than 3 hours.</p>
+    <a class="btn" asp-page="ResendConfirmation">Send a new confirmation email</a>
+</div>

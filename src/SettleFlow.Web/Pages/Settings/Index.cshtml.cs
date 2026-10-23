@@ -48,7 +48,7 @@ public sealed class IndexModel(AppDbContext db, ITenantContext tenant, UserManag
         var scanTask = scanner.HealthAsync();
         var queued = await db.Runs.CountAsync(r => r.Status == RunStatus.Queued);
         var processing = await db.Runs.CountAsync(r => r.Status == RunStatus.Processing);
-        QueueStatus = processing + queued == 0 ? "Idle — ready for new runs" : $"{processing} processing · {queued} waiting";
+        QueueStatus = processing + queued == 0 ? "Ready for new checks" : $"{processing} checking · {queued} waiting";
         // Customer-facing wording only: infrastructure details (hosts, ports, model names) stay in server logs.
         var aiHealth = await aiTask;
         AiStatus = aiHealth.StartsWith("Ready") ? "Available" : aiHealth == "Off" ? "Not enabled — suggestions use matching rules" : "Temporarily unavailable — suggestions use matching rules";
@@ -101,10 +101,12 @@ public sealed class IndexModel(AppDbContext db, ITenantContext tenant, UserManag
             Plan = Org.Plan; RetentionDays = Org.RetentionDays; await LoadStatusAsync();
             return Page();
         }
-        await SendInviteAsync(user);
-        audit.Record("member.invited", $"{user.Email} invited.");
+        var sent = await SendInviteAsync(user);
+        audit.Record(sent ? "member.invited" : "member.invite_email_failed",
+            sent ? $"{user.Email} invited." : $"Account created for {user.Email}, but the invitation email failed.");
         await db.SaveChangesAsync();
-        TempData["Flash"] = $"Invitation sent to {user.Email}.";
+        TempData["Flash"] = sent ? $"Invitation sent to {user.Email}."
+            : $"Account created for {user.Email}, but the invitation couldn't be emailed. Check SMTP and use Resend invite.";
         return RedirectToPage();
     }
 
@@ -115,18 +117,28 @@ public sealed class IndexModel(AppDbContext db, ITenantContext tenant, UserManag
         var user = Members.FirstOrDefault(u => u.Id == userId && u.PasswordHash is null);
         if (user is null) return BadRequest();
         await users.UpdateSecurityStampAsync(user); // old links stop working
-        await SendInviteAsync(user);
-        audit.Record("member.invite_resent", $"Invitation re-sent to {user.Email}.");
+        var sent = await SendInviteAsync(user);
+        audit.Record(sent ? "member.invite_resent" : "member.invite_email_failed",
+            sent ? $"Invitation re-sent to {user.Email}." : $"Invitation email to {user.Email} failed.");
         await db.SaveChangesAsync();
-        TempData["Flash"] = $"Invitation re-sent to {user.Email}.";
+        TempData["Flash"] = sent ? $"Invitation re-sent to {user.Email}."
+            : $"The invitation to {user.Email} couldn't be emailed. Check SMTP and try again.";
         return RedirectToPage();
     }
 
-    private async Task SendInviteAsync(AppUser user)
+    private async Task<bool> SendInviteAsync(AppUser user)
     {
         var token = await users.GenerateUserTokenAsync(user, InviteTokenProvider.ProviderName, InviteTokenProvider.Purpose);
-        try { await email.SendAsync(EmailTemplates.Invite(user.Email!, Org.Name, tenant.UserName, urls.AcceptInvite(user.Id, token))); }
-        catch (Exception ex) { log.LogError(ex, "Invite email to {Email} failed", user.Email); TempData["Flash"] = "The invitation couldn't be emailed — check SMTP settings and resend."; }
+        try
+        {
+            await email.SendAsync(EmailTemplates.Invite(user.Email!, Org.Name, tenant.UserName, urls.AcceptInvite(user.Id, token)));
+            return true;
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "Invite email to {Email} failed", user.Email);
+            return false;
+        }
     }
 
     public async Task<IActionResult> OnPostRemoveMemberAsync(string userId)

@@ -63,3 +63,46 @@ public class CompanySettingsTests
 
     private static CompanyOptions WithDate(string d) => new() { LegalName = "A Ltd", Address = "B", Email = "c@d.in", Jurisdiction = "Pune", EffectiveDate = d };
 }
+
+public class EmailSettingsTests
+{
+    [Fact]
+    public void Secure_complete_smtp_settings_pass_production_validation()
+    {
+        var options = new EmailOptions
+        {
+            Mode = "Smtp", SmtpHost = "smtp.example.com", SmtpPort = 465, Security = "SslOnConnect",
+            Username = "mailer@example.com", Password = "secret", FromAddress = "mailer@example.com", FromName = "Reconza",
+        };
+
+        Assert.Empty(options.ProductionErrors());
+    }
+
+    [Fact]
+    public void Insecure_or_incomplete_smtp_settings_fail_production_validation()
+    {
+        var options = new EmailOptions
+        {
+            Mode = "Pickup", SmtpHost = "", SmtpPort = 0, Security = "None", Username = "mailer@example.com",
+            Password = "", FromAddress = "not-an-email", FromName = "", TimeoutSeconds = 1,
+        };
+
+        var errors = options.ProductionErrors().ToList();
+        Assert.True(errors.Count >= 7);
+        Assert.Contains(errors, e => e.Contains("Email:Mode"));
+        Assert.Contains(errors, e => e.Contains("SmtpHost"));
+        Assert.Contains(errors, e => e.Contains("StartTls or SslOnConnect"));
+        Assert.Contains(errors, e => e.Contains("Username and Email:Password"));
+    }
+
+    [Fact]
+    public void Transactional_templates_encode_user_controlled_html()
+    {
+        var message = EmailTemplates.Invite("member@example.com", "<script>team</script>", "<owner>", "https://example.com/a?x=1&y=2");
+
+        Assert.DoesNotContain("<script>team</script>", message.Html);
+        Assert.Contains("&lt;script&gt;team&lt;/script&gt;", message.Html);
+        Assert.Contains("https://example.com/a?x=1&amp;y=2", message.Html);
+        Assert.Contains("https://example.com/a?x=1&y=2", message.Text);
+    }
+}

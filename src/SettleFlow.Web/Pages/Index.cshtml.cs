@@ -9,12 +9,12 @@ public sealed class IndexModel(AppDbContext db, ITenantContext tenant) : PageMod
 {
     public static readonly (string Q, string A)[] Faq =
     {
-        ("Do I need to change how my customers, vendors or drivers send data?", "No. Reconza reads the Excel and CSV files you already receive — title rows, merged headers, different date formats and IDs written differently (T-1001 vs t1001) are handled automatically."),
-        ("Is AI calculating my settlement?", "No. Matching and every rupee in the settlement come from fixed, tested rules, so the same files always give the same result. AI only suggests which column is which when you set up a new file, and you confirm it."),
-        ("What does it catch?", "Duplicate trips or orders, records missing from one file, amounts that don't match between files (e.g. short-paid freight), unreadable values like 'N/A' in an amount column, and fuel fills or deductions that can't be tied to a driver."),
-        ("What do I get at the end?", "An Excel settlement workbook (summary, settlement per driver or channel, exceptions, and a cleaned copy of every source), plus a printable statement for each driver, and a full audit trail."),
+        ("Do I need to reformat my spreadsheets first?", "Usually, no. Reconza reads Excel and CSV files with title rows, different column names, common date formats and IDs written in different ways. You confirm how the columns line up the first time, then reuse that setup."),
+        ("Does AI decide whether my numbers are correct?", "No. Matching and calculations use fixed, tested rules, so the same files and settings give the same result. AI can suggest which columns correspond when you set up a new file, but you confirm every suggestion."),
+        ("What problems can it find?", "It finds records missing from either file, duplicates, amounts that do not agree, unreadable values and entries that cannot be connected to the right order, invoice, trip, driver or account."),
+        ("What do I get at the end?", "You get an Excel report containing a summary, the possible problems, and the source rows behind the result. Driver-payment setups can also create a printable statement for each driver."),
         ("Is my data safe?", "Each company's data is isolated, files are encrypted at rest, every upload is checked and workbooks with macros or embedded objects are rejected, and uploaded files are deleted automatically after your retention period."),
-        ("How much does it cost?", "There's a free trial with no card. Paid plans start at ₹999/month (or $19/month outside India) and are billed monthly — cancel any time."),
+        ("How much does it cost?", "The free plan has no card and no time limit. Paid plans start at ₹999/month (or $19/month outside India), are billed monthly and can be cancelled at any time."),
     };
 
     public bool SignedIn { get; private set; }

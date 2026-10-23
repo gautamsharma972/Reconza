@@ -34,7 +34,7 @@ else if (Model.Checkout == "cancelled")
                 <span>Billed via @o.BillingProvider · @(o.CancelAtPeriodEnd ? "ends" : "renews") @BillingService.FormatPeriodEnd(o.CurrentPeriodEnd)</span>
             }
             else if (o.SubscriptionStatus == "pending") { <span>Waiting for payment confirmation…</span> }
-            else { <span>Free trial — upgrade for more rows, workflows and seats.</span> }
+            else { <span>Free plan — upgrade for more rows, saved checks and team seats.</span> }
         </div>
     </div>
     @if (Model.IsOwner && Model.Subscribed)
@@ -65,7 +65,7 @@ else if (Model.Checkout == "cancelled")
             <div class="muted small">or @l.PriceIntl outside India</div>
             <ul class="plan-list">
                 <li>@l.MonthlyRows.ToString("N0") rows / month</li>
-                <li>@l.Workflows saved workflows</li>
+                <li>@l.Workflows saved checks</li>
                 <li>@l.Seats seat@(l.Seats > 1 ? "s" : "")</li>
                 <li>@l.MaxFileMb MB per file</li>
             </ul>

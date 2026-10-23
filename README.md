@@ -127,7 +127,7 @@ tests/SettleFlow.Tests  engine, parsing, injection, upload checks, ClamAV protoc
 
 ## Email
 
-Invites, password resets and "your settlement is ready" notices are sent over SMTP using MailKit. Any provider works,
+Sign-up confirmations, invites, password resets and "your checked report is ready" notices are sent over SMTP using MailKit. Any provider works,
 including Amazon SES, Resend, Postmark, Zoho and Google Workspace. In development, `Email:Mode=Pickup` writes `.eml`
 files to `App_Data/mail` instead of sending anything.
 
@@ -138,9 +138,10 @@ files to `App_Data/mail` instead of sending anything.
 | `Email__Security` | `StartTls` (port 587) or `SslOnConnect` (port 465) |
 | `Email__Username` / `Email__Password` | SMTP credentials |
 | `Email__FromAddress` / `Email__FromName` | `no-reply@yourdomain.com` / `Reconza` |
+| `Email__TimeoutSeconds` | `30` |
 
-Links in emails are built from `App__PublicUrl` and never from the request's Host header. Reset links expire after
-3 hours and invites after 3 days, and both are single-use.
+Links in emails are built from `App__PublicUrl` and never from the request's Host header. Sign-up confirmation and
+reset links expire after 3 hours; invites expire after 3 days. Confirmation, reset and invite links are single-use.
 
 ## Billing (Razorpay for ₹, Stripe for $)
 
@@ -195,8 +196,8 @@ Server secrets and business details live in `appsettings.Server.json` on the ser
 The production defaults in `appsettings.Production.json` suit a single server:
 - SQLite with versioned migrations, or MySQL 8 via `Database:Provider=MySql` and `ConnectionStrings:MySql`
   (Oracle's MySql.EntityFrameworkCore, with its own migrations);
-- encrypted files and an encrypted key ring in `App_Data`;
-- ClamAV and AI suggestions off.
+- encrypted files, reports and the encrypted key ring in the server database;
+- optional ClamAV scanning and AI suggestions off.
 
 Any default can be overridden with environment variables. For example, `DATABASE_URL` switches to PostgreSQL.
 
@@ -204,6 +205,7 @@ Production refuses to start without these settings:
 - `App:PublicUrl` (`https://…`)
 - `DataProtection:MasterKey`
 - the company details shown on the Terms, Privacy, Refund and Contact pages
+- working SMTP settings for sign-up confirmations, invitations, password resets and completion notices
 
 These checks stop the site from going live with placeholder legal pages or a missing encryption key.
 
@@ -247,7 +249,7 @@ Email__* (see above), Billing__* (see above)
 ```
 
 At startup the app runs EF Core migrations against PostgreSQL. It refuses to start in Production if any of these hold:
-- Postgres, S3 storage, the master key or a public URL is missing;
+- a durable database/storage provider, the master key, SMTP or a public URL is missing;
 - the public URL is `localhost`;
 - manual plan changes are allowed.
 
@@ -255,6 +257,5 @@ When ClamAV is deployed, set `Scanning__Mode=Required`. Uploads are then refused
 
 ## Not built yet
 
-- **Email verification on sign-up.** Invited users verify by accepting their invite.
 - **Tax invoices with GST.** Razorpay and Stripe issue receipts; GST-compliant invoices need Razorpay Invoices or Stripe Tax.
 - **Admin console** for support staff.

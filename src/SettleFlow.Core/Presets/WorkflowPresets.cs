@@ -8,15 +8,15 @@ public static class WorkflowPresets
 {
     public static readonly IReadOnlyList<WorkflowPreset> All =
     [
-        new("driver-settlement", "Weekly driver settlement",
-            "Trips from your TMS, fuel card statements, driver deductions and a customer's shipment report. " +
-            "Pays each driver gross freight minus fuel and deductions, and checks billed amounts against the customer.",
+        new("driver-settlement", "Weekly driver payments",
+            "Combine trips, fuel, advances and other deductions into one checked amount per driver. " +
+            "Optionally compare trips and amounts with a customer's report.",
             DriverSettlement),
-        new("marketplace-payout", "Marketplace payout reconciliation",
-            "Your order export, the marketplace's settlement report and its fee report. " +
-            "Checks every order was paid at the right amount and computes net receipts per marketplace.",
+        new("marketplace-payout", "Marketplace payout check",
+            "Compare your orders with marketplace payout and fee reports. " +
+            "Find missing or short payments and calculate net receipts per marketplace.",
             MarketplacePayout),
-        new("blank", "Blank workflow", "Start from scratch and define your own fields and sources.", () => new WorkflowDefinition()),
+        new("blank", "Custom spreadsheet check", "Start from scratch and choose the files, columns and checks you need.", () => new WorkflowDefinition()),
     ];
 
     public static WorkflowPreset? Find(string key) => All.FirstOrDefault(p => p.Key == key);

@@ -1,0 +1,20 @@
+@page
+@model SettleFlow.Web.Pages.Account.ResendConfirmationModel
+@{ ViewData["Title"] = "Resend confirmation email"; }
+<div class="form-narrow card">
+    <h1>Resend confirmation email</h1>
+    @if (Model.Sent)
+    {
+        <div class="alert alert-ok">If an unconfirmed account exists for that address, we've sent a new confirmation link. It expires in 3 hours.</div>
+        <a asp-page="Login">Back to sign in</a>
+    }
+    else
+    {
+        <p class="muted">Enter the email used to create your account.</p>
+        <form method="post" data-busy-form>
+            <div class="field"><label asp-for="Email">Email</label><input asp-for="Email" type="email" autocomplete="email" required /></div>
+            <button class="btn" type="submit" data-busy="Sending…">Send confirmation link</button>
+            <a class="small" asp-page="Login" style="margin-left:10px">Back to sign in</a>
+        </form>
+    }
+</div>
