@@ -1,0 +1,13 @@
+@page "/guides"
+@section Head { @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Guides", "/guides"))) }
+<section class="page-hero">
+    <h1>Reconciliation guides</h1>
+    <p>Practical, step-by-step methods for the reconciliations operations teams do every week — in Excel, and with Reconza.</p>
+</section>
+<div class="grid grid-3">
+    @foreach (var g in Seo.Pages.Where(p => p.Path.StartsWith("/guides/")))
+    {
+        <a class="card card-link" href="@g.Path"><h3>@g.Title</h3><p class="muted small">@g.Description</p><span class="small">Read guide →</span></a>
+    }
+</div>
+<partial name="_Cta" model="@((string?)null)" />

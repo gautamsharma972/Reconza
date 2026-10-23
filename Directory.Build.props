@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- The shared VBCSCompiler server intermittently served corrupted Razor parse results on this machine;
+         compiling in-process is a little slower but deterministic. -->
+    <UseSharedCompilation>false</UseSharedCompilation>
+  </PropertyGroup>
+</Project>

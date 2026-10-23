@@ -1,0 +1,7 @@
+@model SeoPage
+<nav class="crumbs center" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/guides">Guides</a></nav>
+<header class="page-hero guide-hero">
+    <h1>@Model.Title</h1>
+    <p>@Model.Description</p>
+    <div class="muted small">Updated @Model.Updated.ToString("d MMMM yyyy")</div>
+</header>

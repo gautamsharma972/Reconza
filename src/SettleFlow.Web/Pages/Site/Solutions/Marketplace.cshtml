@@ -1,0 +1,36 @@
+@page "/solutions/marketplace-payout-reconciliation"
+@{
+    var faq = new (string Q, string A)[]
+    {
+        ("Which marketplaces does it support?", "Any marketplace that gives you a settlement or payment report as Excel or CSV. You map the columns once per report format; Reconza handles the rest."),
+        ("Can it handle fees that come in a separate report?", "Yes. Order exports, settlement reports and fee or commission reports are separate sources. Fees are matched to orders and subtracted to give net receipts per channel."),
+        ("What about partial payments and returns?", "Amounts are compared per order with a tolerance you set, so short payments are flagged with the exact difference. Orders missing from the settlement report are listed separately."),
+    };
+}
+@section Head {
+    @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Marketplace payout reconciliation", "/solutions/marketplace-payout-reconciliation")))
+    @JsonLd.Script(JsonLd.Faq(faq))
+}
+<section class="page-hero">
+    <span class="badge badge-brand">For D2C brands &amp; online sellers</span>
+    <h1>Marketplace payout reconciliation: know every order was paid</h1>
+    <p>Match your order export against marketplace settlement and fee reports. Find unpaid orders, short payments and surprise fees — in minutes, every payout cycle.</p>
+    <div class="row" style="justify-content:center"><a class="btn btn-lg" href="/Account/Register">Start free trial</a><a class="btn btn-lg btn-secondary" href="/guides/marketplace-settlement-reconciliation">Read the guide</a></div>
+</section>
+<div class="prose section">
+    <h2>Why payouts are hard to check</h2>
+    <p>Marketplaces pay in batches that don't line up with your orders: one payout covers dozens of orders, fees arrive in another report, and order IDs are formatted differently between your store export and their settlement file. Checking it by hand means long VLOOKUP chains that break whenever a report format changes.</p>
+    <h2>How Reconza does it</h2>
+    <ul>
+        <li><strong>Orders</strong> from your store or OMS are the system of record.</li>
+        <li><strong>The settlement report</strong> is matched order-by-order; the paid amount is compared to the order value with your tolerance.</li>
+        <li><strong>Fee and commission reports</strong> are matched to orders and subtracted, giving net receipts per marketplace.</li>
+        <li>Orders with <strong>no payout</strong>, payouts for <strong>unknown orders</strong>, and <strong>duplicate</strong> lines are listed for review.</li>
+    </ul>
+    <p>The result is a reconciliation workbook you can hand to your accountant, plus a running record of every exception you raised with the marketplace.</p>
+</div>
+<section class="section faq">
+    <h2 class="section-title">Questions sellers ask</h2>
+    @foreach (var (q, a) in faq) { <details><summary>@q</summary><p>@a</p></details> }
+</section>
+<partial name="_Cta" model="@("Check your last payout in minutes")" />

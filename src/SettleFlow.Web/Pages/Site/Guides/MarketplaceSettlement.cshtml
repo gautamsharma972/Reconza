@@ -1,0 +1,40 @@
+@page "/guides/marketplace-settlement-reconciliation"
+@{ var page = Seo.For("/guides/marketplace-settlement-reconciliation")!; ViewData["OgType"] = "article"; }
+@section Head {
+    @JsonLd.Script(JsonLd.Article(AppUrls, page))
+    @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Guides", "/guides"), (page.Title, page.Path)))
+}
+<partial name="_GuideHead" model="page" />
+<article class="prose guide">
+    <p class="lead">Marketplaces pay you in batches, net of fees, returns and taxes — and the batch rarely lines up neatly with your orders. Reconciling settlements means proving, order by order, that you received what you should have.</p>
+
+    <h2>The three reports you need</h2>
+    <ol>
+        <li><strong>Your order export</strong> from your store, OMS or the marketplace's order report: order ID, date, value. This is your system of record.</li>
+        <li><strong>The settlement or payment report</strong>: which orders each payout covered, and the amount credited per order.</li>
+        <li><strong>The fee or transaction report</strong>: commission, fixed/closing fees, shipping and payment fees, and any adjustments — sometimes in the settlement report, sometimes separate.</li>
+    </ol>
+    <p>In India, also note the taxes the marketplace withholds — TCS under GST and TDS under section 194-O — which reduce the payout but are claimable. Check the current rates against your settlement report rather than assuming them.</p>
+
+    <h2>Step by step</h2>
+    <ol>
+        <li><strong>Normalise order IDs</strong> in all three reports. Exports differ in prefixes, dashes and leading zeros; compare a cleaned form (upper-case, no spaces or dashes).</li>
+        <li><strong>Match the settlement report to orders.</strong> Every order that's past its expected settlement date should appear. Those that don't are <em>unpaid</em>.</li>
+        <li><strong>Match fees to orders</strong> and compute the expected net: order value − fees − withheld taxes ± return adjustments.</li>
+        <li><strong>Compare expected net with the amount actually credited.</strong> Differences above a small tolerance are <em>short payments</em> (or over-payments, which will be clawed back later).</li>
+        <li><strong>Look for duplicates</strong> — the same fee or the same return charged twice.</li>
+        <li><strong>Raise disputes in bulk</strong> with order IDs and amounts, and keep the list so you can track recoveries.</li>
+    </ol>
+
+    <h2>Usual reasons for differences</h2>
+    <ul>
+        <li>Shipping or weight-slab fees higher than expected for the product.</li>
+        <li>Returns or cancellations deducted without the corresponding order being reversed in your books.</li>
+        <li>Promotions co-funded by the seller but not reflected in your order export.</li>
+        <li>Orders delivered but not yet settled because they fall in the next payout cycle — check dates before disputing.</li>
+    </ul>
+
+    <h2>Doing it with Reconza</h2>
+    <p>The <a href="/solutions/marketplace-payout-reconciliation">marketplace payout workflow</a> takes your order export as the system of record, matches the payout report order-by-order with an amount tolerance, subtracts fees matched from the fee report, and lists unpaid orders, short payments and duplicates for review. You map each report's columns once; after that each payout cycle is upload and review. For a one-off check of two files, use the free <a href="/tools/compare-excel-files">comparison tool</a>.</p>
+</article>
+<partial name="_Cta" model="@("Check every payout, every cycle")" />

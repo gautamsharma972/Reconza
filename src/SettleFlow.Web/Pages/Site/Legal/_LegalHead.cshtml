@@ -1,0 +1,6 @@
+@model (string Title, string Path)
+@inject CompanyOptions Company
+<header class="page-hero guide-hero">
+    <h1>@Model.Title</h1>
+    <p class="muted small">Effective @(DateOnly.TryParse(Company.EffectiveDate, out var d) ? d.ToString("d MMMM yyyy") : Company.EffectiveDate) · @Company.LegalName</p>
+</header>

@@ -1,0 +1,42 @@
+@page "/guides/driver-settlement-excel-template"
+@{ var page = Seo.For("/guides/driver-settlement-excel-template")!; ViewData["OgType"] = "article"; }
+@section Head {
+    @JsonLd.Script(JsonLd.Article(AppUrls, page))
+    @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Guides", "/guides"), (page.Title, page.Path)))
+}
+<partial name="_GuideHead" model="page" />
+<div class="download-card card">
+    <div>
+        <h2 style="margin:0 0 4px">Driver settlement template (.xlsx)</h2>
+        <p class="muted small" style="margin:0">Free · no sign-up · works in Excel 2010+, Google Sheets and LibreOffice</p>
+    </div>
+    <a class="btn btn-lg" href="@Seo.TemplatePath" download>⤓ Download template</a>
+</div>
+<article class="prose guide">
+    <p class="lead">Paste this week's trips, fuel fills and deductions into the template, list your driver codes, and it calculates each driver's net payable. It also catches the two errors that cause most settlement disputes.</p>
+
+    <h2>What's inside</h2>
+    <ul>
+        <li><strong>Trips:</strong> trip number, date, driver code and freight pay. A <em>Duplicate?</em> column flags the second and later copies of a trip number, and flagged rows are left out of pay.</li>
+        <li><strong>Fuel:</strong> each fill is matched to its trip, and through the trip to the driver. Fills whose trip number doesn't exist show <code>NO TRIP</code>.</li>
+        <li><strong>Deductions:</strong> cash advances, tolls, damages and uniforms, by driver code.</li>
+        <li><strong>Settlement:</strong> one row per driver showing trips, freight earned, fuel advances, other deductions and net payable. Below it are the unmatched fuel total, the duplicate count, and a <em>Check</em> cell that confirms every rupee was attributed to someone.</li>
+    </ul>
+
+    <h2>Why IDs are cleaned before matching</h2>
+    <p>Fuel portals and TMS exports rarely write references the same way. <code>T-1001</code>, <code>t1001</code> and <code>T 1001</code> are the same trip, and <code>D-002</code> and <code>d002</code> are the same driver. The template compares a cleaned form, which removes spaces and dashes and ignores case, so lookups don't silently miss rows:</p>
+    <pre><code>=UPPER(SUBSTITUTE(SUBSTITUTE(TRIM(A2),"-","")," ",""))</code></pre>
+
+    <h2>How to use it each week</h2>
+    <ol>
+        <li>Save a copy for the week, for example <em>Settlement 2026-W43.xlsx</em>.</li>
+        <li>Clear the sample rows and paste your data into the light-blue columns. Keep the header rows.</li>
+        <li>Fix anything flagged <code>DUPLICATE</code> or <code>NO TRIP</code>.</li>
+        <li>Make sure the <em>Check</em> cell reads <strong>OK</strong>, then pay from the <em>Net payable</em> column.</li>
+    </ol>
+    <p>For the full method, including dates read the wrong way round and amounts stored as text, see <a href="/guides/weekly-driver-settlement-excel">weekly driver settlement in Excel</a>.</p>
+
+    <h2>When you outgrow the template</h2>
+    <p>Templates work well for a handful of drivers and one fuel vendor. If you have several vendors, customers sending their own reports, or more than about 15 drivers, <a href="/solutions/driver-settlement-software">Reconza</a> does the same checks automatically from the files you already receive. It also cross-checks billing against customer reports, records every exception decision, and gives each driver an itemized statement.</p>
+</article>
+<partial name="_Cta" model="@("Skip the copy-paste every week")" />

@@ -1,0 +1,34 @@
+@page "/pricing"
+@{
+    var faq = new (string Q, string A)[]
+    {
+        ("Is there a free trial?", "Yes. The Trial plan is free with no card required: 5,000 rows a month, 2 workflows and 10 runs — enough to run a few real weeks of your own data."),
+        ("How do I pay?", "In India, pay in rupees by UPI Autopay, cards or netbanking through Razorpay. Outside India, pay in US dollars by card through Stripe. Reconza never sees your card details."),
+        ("What counts as a row?", "Every data row in the files you upload in a run. Header and blank rows don't count. A typical weekly settlement for 30 trucks is a few hundred rows."),
+        ("Can I change or cancel my plan?", "Yes, any time from the Billing page. Cancelling keeps your paid plan until the end of the billing period; your history and reports are kept."),
+        ("Are taxes included?", "Prices exclude applicable taxes such as GST."),
+    };
+}
+@section Head {
+    @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Pricing", "/pricing")))
+    @JsonLd.Script(JsonLd.Faq(faq))
+    @JsonLd.Script(JsonLd.Software(AppUrls))
+}
+<section class="page-hero">
+    <h1>Pricing</h1>
+    <p>Start free. Upgrade when Reconza is saving you a day every week. Monthly billing, cancel any time.</p>
+</section>
+<partial name="_PlanCards" />
+<section class="section">
+    <h2 class="section-title">Every plan includes</h2>
+    <div class="grid grid-3">
+        <ul class="checks"><li>Excel (.xlsx, .xls) and CSV uploads</li><li>Automatic column mapping</li><li>Duplicate, missing-record and mismatch detection</li></ul>
+        <ul class="checks"><li>Settlement workbook &amp; exception report</li><li>Printable statement per driver or group</li><li>Exception review with notes</li></ul>
+        <ul class="checks"><li>Full audit log</li><li>Encrypted storage, automatic deletion</li><li>Team members by email invite</li></ul>
+    </div>
+</section>
+<section class="section faq">
+    <h2 class="section-title">Billing questions</h2>
+    @foreach (var (q, a) in faq) { <details><summary>@q</summary><p>@a</p></details> }
+</section>
+<partial name="_Cta" model="@("Try it on last week's files")" />

@@ -1,0 +1,58 @@
+@page "/guides/weekly-driver-settlement-excel"
+@{ var page = Seo.For("/guides/weekly-driver-settlement-excel")!; ViewData["OgType"] = "article"; }
+@section Head {
+    @JsonLd.Script(JsonLd.Article(AppUrls, page))
+    @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Guides", "/guides"), (page.Title, page.Path)))
+}
+<partial name="_GuideHead" model="page" />
+<article class="prose guide">
+    <p class="callout-inline">Want a ready-made workbook? <a href="/guides/driver-settlement-excel-template">Download the free driver settlement template</a> — it implements every step below.</p>
+    <p class="lead">A driver settlement answers one question per driver: <em>what do we owe them for this period?</em> In practice that's freight earned on trips, minus fuel advances, minus other deductions — but the inputs come from three or four files that were never designed to be combined. Here's a method that works in Excel, and the five places it usually goes wrong.</p>
+
+    <h2>What you need</h2>
+    <ul>
+        <li><strong>Trip register</strong> (from your TMS or a sheet): trip number, date, driver code, freight or driver pay.</li>
+        <li><strong>Fuel card statement(s)</strong>: transaction date, card or vehicle, trip/load reference if your drivers enter one, litres, amount.</li>
+        <li><strong>Deductions list</strong>: cash advances, tolls paid by the company, damage recoveries, uniforms — with driver code and amount.</li>
+        <li>Optional: the <strong>customer's shipment report</strong>, to check that what you pay the driver for was actually billed.</li>
+    </ul>
+
+    <h2>Step 1 — Put each file on its own sheet and build a clean key</h2>
+    <p>Different systems write the same trip differently: <code>T-1001</code>, <code>t1001</code>, <code>T 1001</code>. Before any lookup, add a helper column in every sheet that normalises the reference:</p>
+    <pre><code>=UPPER(SUBSTITUTE(SUBSTITUTE(TRIM(A2),"-","")," ",""))</code></pre>
+    <p>Do the same for driver codes. Lookups on raw values are the single biggest source of "missing" fuel fills that aren't really missing.</p>
+
+    <h2>Step 2 — Remove duplicate trips before totalling</h2>
+    <p>Trips entered twice are common when two people update the register. Add a check column on the trip sheet:</p>
+    <pre><code>=COUNTIF($F$2:$F$500, F2)&gt;1</code></pre>
+    <p>Filter on <code>TRUE</code>, decide which copy is real, and remove the other. Never let duplicates flow into SUMIFS — the driver gets paid twice and nobody notices until a dispute.</p>
+
+    <h2>Step 3 — Attribute fuel fills to drivers</h2>
+    <p>Fuel statements usually identify a card or vehicle, not a driver. If drivers enter the trip number at the pump, look the driver up through the trip:</p>
+    <pre><code>=XLOOKUP(G2, Trips!$F:$F, Trips!$C:$C, "NO TRIP")</code></pre>
+    <p>Anything returning <code>NO TRIP</code> needs a human: a typo, a fill on another vehicle, or a card used outside a trip. One trip can have several fills — that's fine, SUMIFS will add them.</p>
+
+    <h2>Step 4 — Total per driver and compute net pay</h2>
+    <p>On a settlement sheet with one row per driver code:</p>
+    <pre><code>Freight     =SUMIFS(Trips!E:E, Trips!C:C, A2)
+Fuel        =SUMIFS(Fuel!F:F, Fuel!H:H, A2)
+Deductions  =SUMIFS(Deductions!D:D, Deductions!A:A, A2)
+Net payable =B2-C2-D2</code></pre>
+    <p>Then reconcile the totals: the sum of the Freight column should equal the trip register total (after removing duplicates), and the same for fuel and deductions. If they don't, something didn't attribute.</p>
+
+    <h2>Step 5 — Cross-check against what the customer was billed</h2>
+    <p>If customers send shipment or remittance reports, match them to trips on the same clean key and compare amounts. Trips missing from the customer's report are revenue at risk; amount differences are short payments you should raise <em>before</em> paying the driver in full.</p>
+
+    <h2>The five errors behind most settlement disputes</h2>
+    <ol>
+        <li><strong>IDs formatted differently</strong> between files, so lookups silently miss rows.</li>
+        <li><strong>Duplicate trips or deductions</strong> counted twice.</li>
+        <li><strong>Dates read the wrong way round</strong> — 03/04 becomes 4 March instead of 3 April when a CSV is opened with US settings, moving a fill into the wrong week.</li>
+        <li><strong>Amounts stored as text</strong> (<code>"₹4,250.00"</code>, <code>N/A</code>) that SUMIFS quietly ignores.</li>
+        <li><strong>Overwritten formulas and no trail</strong> — when a driver queries a number weeks later, nobody can show where it came from.</li>
+    </ol>
+
+    <h2>When to stop doing it by hand</h2>
+    <p>The Excel method is fine for a handful of drivers. Once you have more than ~15 drivers, several fuel vendors, or customers sending their own reports, the weekly rebuild starts taking most of a day and the error rate climbs. <a href="/solutions/driver-settlement-software">Reconza</a> runs exactly these steps automatically — key cleaning, duplicate removal, fuel attribution, customer cross-checks — and produces a statement per driver with every exception explained. You can also try the core matching for free with the <a href="/tools/compare-excel-files">Excel comparison tool</a>.</p>
+</article>
+<partial name="_Cta" model="@("Run your next settlement in minutes")" />

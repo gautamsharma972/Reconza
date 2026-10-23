@@ -1,0 +1,90 @@
+@page
+@model SettleFlow.Web.Pages.Billing.IndexModel
+@inject AppOptions Support
+@{
+    ViewData["Title"] = "Billing";
+    var o = Model.Org;
+    var current = Plans.For(o.Plan);
+}
+<div class="page-head">
+    <div><h1>Plan &amp; billing</h1><div class="muted">@o.Name</div></div>
+</div>
+
+@if (Model.Checkout == "success")
+{
+    <div class="alert alert-ok"><strong>Payment received — thank you!</strong> Your plan updates as soon as the payment provider confirms, usually within a minute. Refresh this page if it hasn't changed yet.</div>
+}
+else if (Model.Checkout == "cancelled")
+{
+    <div class="alert alert-info">Checkout was cancelled. You haven't been charged.</div>
+}
+@if (Model.Error is not null) { <div class="alert alert-bad">@Model.Error</div> }
+@if (o.SubscriptionStatus == "past_due")
+{
+    <div class="alert alert-warn"><strong>Your last payment didn't go through.</strong> Your plan stays active for now — please update your payment method to avoid losing access to paid features.</div>
+}
+
+<div class="card current-plan">
+    <div>
+        <div class="stat-label">Current plan</div>
+        <div class="stat-value">@current.Name</div>
+        <div class="muted small">
+            @if (o.SubscriptionStatus is "active" or "past_due")
+            {
+                <span>Billed via @o.BillingProvider · @(o.CancelAtPeriodEnd ? "ends" : "renews") @BillingService.FormatPeriodEnd(o.CurrentPeriodEnd)</span>
+            }
+            else if (o.SubscriptionStatus == "pending") { <span>Waiting for payment confirmation…</span> }
+            else { <span>Free trial — upgrade for more rows, workflows and seats.</span> }
+        </div>
+    </div>
+    @if (Model.IsOwner && Model.Subscribed)
+    {
+        if (o.BillingProvider == "Stripe")
+        {
+            <form method="post" asp-page-handler="Manage"><button class="btn btn-secondary">Invoices, payment method &amp; cancel</button></form>
+        }
+        else if (o.BillingProvider == "Razorpay" && !o.CancelAtPeriodEnd)
+        {
+            <form method="post" asp-page-handler="Cancel"><button class="btn btn-danger" data-confirm="Cancel at the end of this billing period? You keep paid features until then.">Cancel subscription</button></form>
+        }
+    }
+</div>
+
+@if (!Model.StripeOn && !Model.RazorpayOn)
+{
+    <div class="alert alert-info">Online payment is coming soon. To upgrade now, @(string.IsNullOrEmpty(Support.SupportEmail) ? "contact us" : Html.Raw($"email <a href=\"mailto:{System.Net.WebUtility.HtmlEncode(Support.SupportEmail)}\">{System.Net.WebUtility.HtmlEncode(Support.SupportEmail)}</a>")) and we'll set up your plan.</div>
+}
+
+<div class="grid grid-3" style="margin-top:16px">
+    @foreach (var (plan, l) in Plans.Limits.Where(kv => kv.Key != Plan.Trial))
+    {
+        var isCurrent = plan == o.Plan && Model.Subscribed;
+        <div class="card plan-card @(isCurrent ? "plan-current" : "")">
+            <h3>@l.Name @if (isCurrent) { <span class="badge badge-ok">Current</span> }</h3>
+            <div class="price">@l.PriceIndia</div>
+            <div class="muted small">or @l.PriceIntl outside India</div>
+            <ul class="plan-list">
+                <li>@l.MonthlyRows.ToString("N0") rows / month</li>
+                <li>@l.Workflows saved workflows</li>
+                <li>@l.Seats seat@(l.Seats > 1 ? "s" : "")</li>
+                <li>@l.MaxFileMb MB per file</li>
+            </ul>
+            @if (Model.IsOwner && !isCurrent)
+            {
+                <form method="post" asp-page-handler="Subscribe" class="plan-actions" data-busy-form>
+                    <input type="hidden" name="plan" value="@plan" />
+                    @if (Model.RazorpayOn && (!Model.Subscribed || o.BillingProvider == "Razorpay"))
+                    {
+                        <button class="btn" name="provider" value="Razorpay" data-busy="Opening Razorpay…">@(Model.Subscribed ? "Switch" : "Pay") in ₹ <span class="small">UPI · cards · netbanking</span></button>
+                    }
+                    @if (Model.StripeOn && (!Model.Subscribed || o.BillingProvider == "Stripe"))
+                    {
+                        <button class="btn @(Model.RazorpayOn ? "btn-secondary" : "")" name="provider" value="Stripe" data-busy="Opening Stripe…">@(Model.Subscribed ? "Change in portal" : "Pay in $") <span class="small">cards</span></button>
+                    }
+                </form>
+            }
+        </div>
+    }
+</div>
+@if (!Model.IsOwner) { <p class="muted small" style="margin-top:12px">Only the account owner can change the plan.</p> }
+<p class="muted small" style="margin-top:16px">Prices exclude applicable taxes. Payments are processed by Razorpay (India) or Stripe (international); Reconza never sees your card details.</p>

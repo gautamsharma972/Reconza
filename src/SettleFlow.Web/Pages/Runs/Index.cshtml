@@ -1,0 +1,5 @@
+@page
+@model SettleFlow.Web.Pages.Runs.IndexModel
+@{ ViewData["Title"] = "Runs"; }
+<div class="page-head"><div><h1>Processing history</h1><div class="muted">Every run, with the exact files and workflow version used.</div></div></div>
+<div class="card card-tight"><partial name="_RunTable" model="Model.Runs" /></div>

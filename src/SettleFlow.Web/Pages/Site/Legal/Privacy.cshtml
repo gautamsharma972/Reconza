@@ -1,0 +1,61 @@
+@page "/privacy"
+@inject CompanyOptions Company
+@inject AppOptions App
+@inject SeoOptions SeoConfig
+@section Head { @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Privacy policy", "/privacy"))) }
+<partial name="_LegalHead" model="@(("Privacy policy", "/privacy"))" />
+<article class="prose legal">
+    <p>This policy explains how @Company.LegalName ("Reconza", "we", "us") handles personal data when you visit our website or use the Reconza service. We process data in line with applicable Indian law, including the Information Technology Act, 2000 and the Digital Personal Data Protection Act, 2023.</p>
+
+    <h2>1. What we collect</h2>
+    <ul>
+        <li><strong>Account details:</strong> your name if provided, work email, company name, and a hashed password.</li>
+        <li><strong>Files you upload</strong> and the results we generate from them. These may contain personal data about third parties, such as driver names or codes. For that data you are the data fiduciary (controller) and we process it only to provide the service to you.</li>
+        <li><strong>Usage and audit records:</strong> actions taken in your account (for example runs, reviews and downloads), with timestamps and the user who took them.</li>
+        <li><strong>Technical data:</strong> IP address, browser type and request logs used for security, rate limiting and troubleshooting.</li>
+        <li><strong>Billing data:</strong> your plan, subscription status and invoices. Card, UPI and bank details are collected by our payment processors and never reach our servers.</li>
+    </ul>
+
+    <h2>2. How we use it</h2>
+    <ul>
+        <li>To provide the service: reconciling your files, generating reports and statements, and keeping history and audit trails.</li>
+        <li>To run your account: sign-in, team invitations, password resets and transactional emails such as "your settlement is ready".</li>
+        <li>To secure the service: abuse prevention, fraud detection, malware checks and investigating incidents.</li>
+        <li>To bill you and meet legal, tax and accounting obligations.</li>
+        <li>To improve the product, using aggregated usage information. We do not sell personal data, and we do not use your uploaded files to train AI models.</li>
+    </ul>
+
+    <h2>3. AI features</h2>
+    <p>Settlement calculations never use AI. If AI column suggestions are enabled, the column headers and a few sample rows of a file you are setting up are processed by an open-source model running on infrastructure we control. They are not sent to third-party AI providers.</p>
+
+    <h2>4. Who we share it with</h2>
+    <p>We share data only with service providers that help us run Reconza, under contracts that limit their use of it:</p>
+    <ul>
+        <li>our hosting and storage provider;</li>
+        <li>our email delivery provider;</li>
+        <li>payment processors (Razorpay and Stripe) if you subscribe.</li>
+    </ul>
+    <p>We may also disclose data where the law requires it. We do not share your files with other customers.</p>
+
+    <h2>5. Where and how long we keep it</h2>
+    <ul>
+        <li><strong>Uploaded files and generated reports</strong> are deleted automatically after your account's retention period, which is 30 days by default. You can change this in Settings, and you can delete a run's files at any time.</li>
+        <li><strong>Run summaries, exception decisions and audit logs</strong> are kept while your account is active, so your history stays complete.</li>
+        <li><strong>Account data</strong> is deleted within 30 days of a verified request to close your account. Records we must keep by law, such as invoices, are retained for the required period.</li>
+    </ul>
+
+    <h2>6. Security</h2>
+    <p>Each company's data is isolated. Files are encrypted at rest, uploads are checked before processing, and access is logged. See <a href="/security">Security &amp; data handling</a> for details. No system is perfectly secure; if a breach affects your data, we will notify you and the authorities as the law requires.</p>
+
+    <h2>7. Cookies</h2>
+    <p>We use only essential cookies: <code>rz.auth</code> keeps you signed in, <code>rz.csrf</code> protects forms against cross-site request forgery, and <code>rz.msg</code> briefly carries one-time notices such as "Saved". We do not use advertising or cross-site tracking cookies.@if (!string.IsNullOrEmpty(SeoConfig.CloudflareAnalyticsToken)) { <text> To understand which pages are useful, our public pages use Cloudflare Web Analytics, which is cookieless and does not track you across sites.</text> }</p>
+
+    <h2>8. Your rights</h2>
+    <p>You can ask to access, correct or erase your personal data, withdraw consent where processing relies on it, and nominate someone to exercise your rights. To make a request, email <a href="mailto:@Company.Email">@Company.Email</a> from the address on your account. If you are not satisfied with our response, you may complain to the Data Protection Board of India.</p>
+
+    <h2>9. Changes</h2>
+    <p>If we make material changes to this policy, we will notify account owners by email or in the app before they take effect.</p>
+
+    <h2>10. Contact</h2>
+    <p>@Company.LegalName, @Company.Address. Email: <a href="mailto:@Company.Email">@Company.Email</a>@(string.IsNullOrEmpty(Company.Phone) ? "" : $" · Phone: {Company.Phone}").</p>
+</article>

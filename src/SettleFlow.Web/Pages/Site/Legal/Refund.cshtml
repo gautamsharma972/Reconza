@@ -1,0 +1,26 @@
+@page "/refund-policy"
+@inject CompanyOptions Company
+@section Head { @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Refund & cancellation policy", "/refund-policy"))) }
+<partial name="_LegalHead" model="@(("Refund & cancellation policy", "/refund-policy"))" />
+<article class="prose legal">
+    <h2>Try before you pay</h2>
+    <p>Reconza has a free plan with no card required, so you can test it on your own files before subscribing.</p>
+
+    <h2>Cancelling</h2>
+    <ul>
+        <li>You can cancel a paid plan at any time from <strong>Billing</strong> in the app. If you subscribed in US dollars, cancel through the customer portal linked there.</li>
+        <li>Your paid plan stays active until the end of the current billing month. After that your account moves to the free plan's limits, and your history and reports are kept.</li>
+        <li>No cancellation fee applies.</li>
+    </ul>
+
+    <h2>Refunds</h2>
+    <ul>
+        <li>Monthly fees cover the month in which they are charged and are not refunded for a partly used month, except as set out below or where the law requires otherwise.</li>
+        <li><strong>Duplicate or incorrect charges</strong> are refunded in full. This covers being charged twice, or charged after cancelling.</li>
+        <li><strong>Service problems:</strong> if Reconza was unavailable or not working for a significant part of a billing month because of a fault on our side, contact us within 30 days and we will refund or credit that month.</li>
+        <li>Approved refunds go back to the original payment method, usually within 7 working days of approval. Your bank or card issuer may take longer to show the credit.</li>
+    </ul>
+
+    <h2>How to request a refund</h2>
+    <p>Email <a href="mailto:@Company.Email">@Company.Email</a> from your account email. Include your company name, the payment date and amount, and the reason. We reply within 3 working days.</p>
+</article>

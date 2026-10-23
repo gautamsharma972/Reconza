@@ -1,0 +1,25 @@
+@page "/contact"
+@inject CompanyOptions Company
+@section Head {
+    @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Contact", "/contact")))
+    @JsonLd.Script(new Dictionary<string, object> { ["@context"] = "https://schema.org", ["@type"] = "Organization", ["name"] = "Reconza", ["legalName"] = Company.LegalName, ["email"] = Company.Email, ["url"] = AppUrls.Absolute("/"), ["address"] = Company.Address })
+}
+<section class="page-hero">
+    <h1>Contact us</h1>
+    <p>Questions about Reconza, a demo on your own files, billing or security — we usually reply within one working day.</p>
+</section>
+<div class="grid grid-2 contact-grid">
+    <div class="card">
+        <h2>Email</h2>
+        <p><a class="contact-email" href="mailto:@Company.Email">@Company.Email</a></p>
+        <p class="muted small">For support, write from the email address on your Reconza account so we can find it quickly. Please don't email us passwords or full data files.</p>
+        @if (!string.IsNullOrEmpty(Company.Phone)) { <h3>Phone</h3><p>@Company.Phone</p> }
+    </div>
+    <div class="card">
+        <h2>Company</h2>
+        <p><strong>@Company.LegalName</strong><br />@Company.Address</p>
+        @if (!string.IsNullOrEmpty(Company.Gstin)) { <p class="muted small">GSTIN: @Company.Gstin</p> }
+        <p class="small"><a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/refund-policy">Refunds &amp; cancellation</a> · <a href="/security">Security</a></p>
+    </div>
+</div>
+<partial name="_Cta" model="@("Want to see it on your own files?")" />

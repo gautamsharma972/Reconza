@@ -1,0 +1,65 @@
+@page "/solutions/driver-settlement-software"
+@{
+    var faq = new (string Q, string A)[]
+    {
+        ("Which files does it work with?", "Your trip register or TMS export, fuel card statements (CSV or Excel from any provider), a deductions or advances list, and optionally a customer's shipment report to cross-check billing. Column names and layouts can differ — you map them once."),
+        ("How are fuel fills matched to drivers?", "By trip or load reference. Fuel portals often write references differently (t1001 vs T-1001); Reconza normalises them, handles several fills on one trip, and flags fills that don't match any trip."),
+        ("Can drivers get their own statement?", "Yes. Every run produces a printable statement per driver listing each trip, fuel fill and deduction with subtotals and the net amount, plus notes on anything that was queried."),
+        ("Does it replace my TMS or accounting software?", "No. It sits between them: it reconciles the files your systems already produce and gives you a settlement you can pay from and post to accounts."),
+    };
+}
+@section Head {
+    @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Driver settlement software", "/solutions/driver-settlement-software")))
+    @JsonLd.Script(JsonLd.Faq(faq))
+}
+<section class="page-hero">
+    <span class="badge badge-brand">For transporters, fleet owners &amp; freight brokers</span>
+    <h1>Driver settlement software that works with the files you already have</h1>
+    <p>Every week: trips from your TMS, fuel card statements from your vendors, advances and deductions from the office — reconciled and turned into one net-pay figure per driver, with every exception explained.</p>
+    <div class="row" style="justify-content:center"><a class="btn btn-lg" href="/Account/Register">Start free trial</a><a class="btn btn-lg btn-secondary" href="/guides/weekly-driver-settlement-excel">Read the Excel guide</a></div>
+</section>
+
+<div class="grid grid-2 section" style="align-items:start">
+    <div class="prose">
+        <h2>The weekly settlement, without the VLOOKUPs</h2>
+        <p>A typical settlement combines four or more files that were never designed to work together. Trip numbers are typed differently in each, dates arrive as <code>13/10/2026</code> in one file and as Excel serial numbers in another, and amounts come as text like <code>"₹4,250.00"</code>. Reconza cleans all of that before matching, so you're comparing like with like.</p>
+        <h3>What it checks automatically</h3>
+        <ul>
+            <li><strong>Duplicate trips</strong> entered twice in the register — counted once, flagged for review.</li>
+            <li><strong>Fuel fills with no trip</strong> — a common sign of a typo, a fill on another vehicle, or misuse of a card.</li>
+            <li><strong>Short-paid freight</strong> — your trip amount versus what the customer's report says they owe, with your own tolerance.</li>
+            <li><strong>Trips missing from the customer's report</strong> — before they become unbilled revenue.</li>
+            <li><strong>Unreadable or missing values</strong> — "N/A" in an amount, a trip with no driver code.</li>
+        </ul>
+        <h3>What you get</h3>
+        <ul>
+            <li>A settlement per driver: freight earned, fuel advances, other deductions, net payable.</li>
+            <li>An itemized statement for each driver you can print or save as PDF.</li>
+            <li>An Excel workbook with the summary, settlement, exceptions and a cleaned copy of each source file.</li>
+            <li>An audit trail: which files (with fingerprints), who reviewed what, when.</li>
+        </ul>
+    </div>
+    <div class="card sticky-card">
+        <h3>Example run</h3>
+        <p class="muted small">From our demo files — 4 messy spreadsheets, 61 rows.</p>
+        <table class="mini">
+            <thead><tr><th>Driver</th><th class="num">Freight</th><th class="num">Fuel</th><th class="num">Net</th></tr></thead>
+            <tbody>
+                <tr><td>D001</td><td class="num">38,930</td><td class="num">−18,798</td><td class="num"><b>18,132</b></td></tr>
+                <tr><td>D002</td><td class="num">41,854</td><td class="num">−22,847</td><td class="num"><b>17,957</b></td></tr>
+                <tr><td>D003</td><td class="num">29,351</td><td class="num">−24,004</td><td class="num"><b>3,847</b></td></tr>
+            </tbody>
+        </table>
+        <ul class="checks small" style="margin-top:14px">
+            <li>1 duplicate trip caught</li><li>1 short-paid trip (−1,250)</li><li>1 fuel fill with no matching trip</li><li>1 trip missing from customer report</li>
+        </ul>
+        <a class="btn" style="width:100%; justify-content:center; margin-top:10px" href="/Account/Register">Run it on your files</a>
+    </div>
+</div>
+
+<section class="section faq">
+    <h2 class="section-title">Questions transporters ask</h2>
+    @foreach (var (q, a) in faq) { <details><summary>@q</summary><p>@a</p></details> }
+</section>
+<p class="muted center">Related: <a href="/guides/driver-settlement-excel-template">Free driver settlement Excel template</a> · <a href="/guides/fuel-card-reconciliation">How to reconcile fuel card statements</a> · <a href="/tools/compare-excel-files">Compare two Excel files free</a></p>
+<partial name="_Cta" model="@("Get settlement day back")" />

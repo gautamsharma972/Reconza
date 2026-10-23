@@ -1,0 +1,30 @@
+@page "/Error/{code:int?}"
+@model ErrorModel
+@{
+    var notFound = Model.Code == 404;
+    ViewData["Title"] = notFound ? "Page not found" : "Something went wrong";
+}
+<div class="error-page">
+    <div class="error-code">@(Model.Code is >= 400 and < 600 ? Model.Code : 500)</div>
+    @if (notFound)
+    {
+        <h1>We couldn't find that page</h1>
+        <p class="muted">The link may be old or mistyped. Here are some places to go instead:</p>
+    }
+    else if (Model.Code == 429)
+    {
+        <h1>Too many requests</h1>
+        <p class="muted">Please wait a minute and try again.</p>
+    }
+    else
+    {
+        <h1>Something went wrong on our side</h1>
+        <p class="muted">The problem has been logged. Please try again in a moment@(Model.ShowRequestId ? "; if it keeps happening, quote this reference when you contact us:" : ".")</p>
+        @if (Model.ShowRequestId) { <p><code>@Model.RequestId</code></p> }
+    }
+    <div class="row" style="justify-content:center; margin-top:20px">
+        <a class="btn" href="/">Home</a>
+        @if (User.Identity?.IsAuthenticated == true) { <a class="btn btn-secondary" href="/Runs">Your runs</a> }
+        else { <a class="btn btn-secondary" href="/tools/compare-excel-files">Free comparison tool</a> }
+    </div>
+</div>

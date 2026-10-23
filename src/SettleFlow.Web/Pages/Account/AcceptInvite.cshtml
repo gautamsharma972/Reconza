@@ -1,0 +1,22 @@
+@page
+@model SettleFlow.Web.Pages.Account.AcceptInviteModel
+@{ ViewData["Title"] = "Join your team"; }
+<div class="form-narrow card">
+    @if (Model.Invalid)
+    {
+        <h1>Invitation expired</h1>
+        <p class="muted">This invitation link is invalid, already used, or older than 3 days. Ask your team owner to resend it.</p>
+    }
+    else
+    {
+        <h1>Join @Model.OrgName</h1>
+        <p class="muted">You're joining as <strong>@Model.Email</strong>. Choose a password to finish.</p>
+        <div asp-validation-summary="All" class="alert alert-bad" style="@(ViewData.ModelState.IsValid ? "display:none" : "")"></div>
+        <form method="post">
+            <input type="hidden" asp-for="UserId" /><input type="hidden" asp-for="Token" />
+            <div class="field"><label asp-for="Password">Password</label><input asp-for="Password" type="password" autocomplete="new-password" required />
+                <div class="hint">At least 10 characters, with upper- and lower-case letters and a digit.</div></div>
+            <button class="btn" type="submit">Join team</button>
+        </form>
+    }
+</div>

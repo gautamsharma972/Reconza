@@ -1,0 +1,19 @@
+@model SettleFlow.Web.Data.Run
+<div class="table-wrap">
+<table>
+    <thead><tr><th>Source</th><th>File</th><th class="num">Rows</th><th class="num">Size</th><th>Virus scan</th><th>SHA-256</th></tr></thead>
+    <tbody>
+    @foreach (var f in Model.Files.OrderBy(f => f.SourceName))
+    {
+        <tr>
+            <td>@f.SourceName</td>
+            <td>@if (f.StorageKey is not null) { <a asp-page="/Runs/Details" asp-page-handler="File" asp-route-id="@Model.Id" asp-route-fileId="@f.Id">@f.FileName</a> } else { @f.FileName }</td>
+            <td class="num">@(f.Rows > 0 ? f.Rows.ToString("N0") : "—")</td>
+            <td class="num">@((f.SizeBytes / 1024.0).ToString("N1")) KB</td>
+            <td>@if (f.ScanStatus == "Clean") { <span class="badge badge-ok" title="@f.ScanDetail">✓ Clean</span> } else { <span class="badge" title="@f.ScanDetail">Not scanned</span> }</td>
+            <td class="mono small" title="@f.Sha256">@f.Sha256[..12]…</td>
+        </tr>
+    }
+    </tbody>
+</table>
+</div>

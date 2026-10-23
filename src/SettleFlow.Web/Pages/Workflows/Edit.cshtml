@@ -1,0 +1,106 @@
+@page "{id:guid}"
+@model SettleFlow.Web.Pages.Workflows.EditModel
+@{ ViewData["Title"] = Model.Workflow.Name; }
+<div class="page-head">
+    <div><div class="muted small"><a asp-page="Index">Workflows</a> /</div><h1>@Model.Workflow.Name</h1></div>
+    <a class="btn" asp-page="/Runs/New" asp-route-workflowId="@Model.Workflow.Id">Run this workflow →</a>
+</div>
+
+<div asp-validation-summary="All" class="alert alert-bad" style="@(ViewData.ModelState.IsValid ? "display:none" : "")"></div>
+@if (Model.Issues.Count > 0)
+{
+    <div class="alert alert-warn"><strong>Finish setup before running:</strong><ul>@foreach (var i in Model.Issues) { <li>@i</li> }</ul></div>
+}
+
+<h2>Sources</h2>
+<p class="muted small">Each source is one file you upload per run. The <strong>Primary</strong> source is the system of record that others are matched against.</p>
+<div class="grid grid-2" style="margin-bottom:12px">
+    @foreach (var s in Model.Def.Sources)
+    {
+        <div class="card source-card role-@s.Role">
+            <div class="card-head" style="margin-bottom:8px">
+                <h3 style="margin:0">@s.Name <span class="badge">@s.Role</span></h3>
+                <div class="row">
+                    <a class="btn btn-sm btn-secondary" asp-page="Source" asp-route-id="@Model.Workflow.Id" asp-route-source="@s.Name">Mapping &amp; rules</a>
+                    <form method="post" asp-page-handler="RemoveSource" asp-route-id="@Model.Workflow.Id" asp-route-source="@s.Name" class="inline-form">
+                        <button class="btn btn-sm btn-danger" data-confirm="Remove source '@s.Name' and its mapping?">Remove</button>
+                    </form>
+                </div>
+            </div>
+            <dl class="kv small">
+                <dt>Columns mapped</dt><dd>@(s.ColumnMap.Count == 0 ? "none" : string.Join(", ", s.ColumnMap.Select(kv => $"{kv.Value} → {Model.Def.Field(kv.Key)?.Label ?? kv.Key}")))</dd>
+                <dt>Unique key</dt><dd>@(s.KeyFields.Count == 0 ? "—" : string.Join(" + ", s.KeyFields))</dd>
+                @if (s.Role != SourceRole.Primary) { <dt>Matched on</dt><dd>@(s.MatchFields.Count == 0 ? "— (attributed by " + Model.Def.GroupByField + ")" : string.Join(" + ", s.MatchFields))</dd> }
+                <dt>Amount</dt><dd>@(s.AmountField ?? "—")</dd>
+                @if (s.CompareField is not null) { <dt>Compares</dt><dd>@s.CompareField vs primary @s.PrimaryCompareField (±@s.CompareTolerance)</dd> }
+            </dl>
+        </div>
+    }
+    <div class="card">
+        <h3>Add a source</h3>
+        <form method="post" asp-page-handler="AddSource" asp-route-id="@Model.Workflow.Id">
+            <div class="field"><label asp-for="NewSourceName">Name</label><input asp-for="NewSourceName" placeholder="e.g. Toll statement" /></div>
+            <div class="field"><label asp-for="NewSourceRole">Role</label>
+                <select asp-for="NewSourceRole" asp-items="Html.GetEnumSelectList<SourceRole>()"></select>
+                <div class="hint">Deduction subtracts from the settlement, Addition adds, Reference only is used for checks.</div></div>
+            <button class="btn btn-secondary" type="submit">Add source</button>
+        </form>
+    </div>
+</div>
+
+<form method="post" asp-page-handler="Save" asp-route-id="@Model.Workflow.Id">
+<div class="grid grid-2" style="align-items:start; margin-top:24px">
+    <div class="card">
+        <h2>General</h2>
+        <div class="field"><label asp-for="Name">Workflow name</label><input asp-for="Name" /></div>
+        <div class="field"><label asp-for="GroupByField">Settle per</label>
+            <select asp-for="GroupByField">
+                <option value="">— choose a field —</option>
+                @foreach (var f in Model.Def.Fields) { <option value="@f.Name" selected="@(f.Name == Model.GroupByField)">@f.Label</option> }
+            </select>
+            <div class="hint">Totals are grouped by this field — e.g. one settlement line per driver.</div></div>
+    </div>
+    <div class="card">
+        <h2>Report template</h2>
+        <div class="grid grid-2">
+            <div class="field"><label>Title</label><input name="Report.Title" value="@Model.Report.Title" /></div>
+            <div class="field"><label>Group column label</label><input name="Report.GroupLabel" value="@Model.Report.GroupLabel" /></div>
+            <div class="field"><label>Net column label</label><input name="Report.NetLabel" value="@Model.Report.NetLabel" /></div>
+            <div class="field"><label>Number format</label><input name="Report.CurrencyFormat" value="@Model.Report.CurrencyFormat" /><div class="hint">Excel format, e.g. <code>₹#,##,##0.00</code></div></div>
+        </div>
+        @foreach (var s in Model.Def.Sources.Where(s => s.AmountField is not null && s.Role != SourceRole.ReferenceOnly))
+        {
+            <div class="field"><label>Column label for @s.Name</label><input name="Report.SourceLabels[@s.Name]" value="@Model.Report.SourceLabels.GetValueOrDefault(s.Name)" placeholder="@s.Name" /></div>
+        }
+        <label class="check"><input type="checkbox" name="Report.IncludeExceptionsSheet" value="true" checked="@Model.Report.IncludeExceptionsSheet" /><input type="hidden" name="Report.IncludeExceptionsSheet" value="false" /> Include exceptions sheet</label>
+        <label class="check"><input type="checkbox" name="Report.IncludeDetailSheets" value="true" checked="@Model.Report.IncludeDetailSheets" /><input type="hidden" name="Report.IncludeDetailSheets" value="false" /> Include normalized detail sheet per source</label>
+    </div>
+</div>
+
+<div class="card card-tight" style="margin-top:16px">
+    <div class="card-head"><h2 style="margin:0">Fields</h2><span class="muted small">The canonical columns every source maps onto. Synonyms improve automatic mapping.</span></div>
+    <div class="table-wrap">
+    <table>
+        <thead><tr><th>Name</th><th>Label</th><th>Type</th><th>Header synonyms (comma-separated)</th><th>Remove</th></tr></thead>
+        <tbody>
+        @for (var i = 0; i < Model.Fields.Count; i++)
+        {
+            var f = Model.Fields[i];
+            <tr>
+                <td style="width:150px">
+                    <input type="hidden" name="Fields[@i].IsNew" value="@f.IsNew.ToString().ToLower()" />
+                    @if (f.IsNew) { <input name="Fields[@i].Name" value="@f.Name" placeholder="New field…" /> }
+                    else { <input type="hidden" name="Fields[@i].Name" value="@f.Name" /><code>@f.Name</code> }
+                </td>
+                <td style="width:170px"><input name="Fields[@i].Label" value="@f.Label" /></td>
+                <td style="width:120px"><select name="Fields[@i].Type">@foreach (var t in Enum.GetValues<FieldType>()) { <option value="@t" selected="@(t == f.Type)">@t</option> }</select></td>
+                <td><input name="Fields[@i].Synonyms" value="@f.Synonyms" /></td>
+                <td style="width:70px">@if (!f.IsNew) { <input type="checkbox" name="Fields[@i].Remove" value="true" /> }</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    </div>
+</div>
+<div style="margin-top:16px"><button class="btn" type="submit">Save changes</button></div>
+</form>

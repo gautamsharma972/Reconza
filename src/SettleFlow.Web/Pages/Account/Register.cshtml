@@ -1,0 +1,16 @@
+@page
+@model SettleFlow.Web.Pages.Account.RegisterModel
+@{ ViewData["Title"] = "Start free trial"; }
+<div class="form-narrow card">
+    <h1>Start your free trial</h1>
+    <p class="muted">Set up your organization. No card needed.</p>
+    <div asp-validation-summary="All" class="alert alert-bad" style="@(ViewData.ModelState.IsValid ? "display:none" : "")"></div>
+    <form method="post">
+        <div class="field"><label asp-for="Input.Organization">Company name</label><input asp-for="Input.Organization" autocomplete="organization" /></div>
+        <div class="field"><label asp-for="Input.Email">Work email</label><input asp-for="Input.Email" autocomplete="email" /></div>
+        <div class="field"><label asp-for="Input.Password">Password</label><input asp-for="Input.Password" autocomplete="new-password" /><div class="hint">At least 10 characters, with upper- and lower-case letters and a digit.</div></div>
+        <button class="btn" type="submit">Create account</button>
+        <p class="consent">By creating an account you agree to the <a href="/terms" target="_blank">Terms of service</a> and <a href="/privacy" target="_blank">Privacy policy</a>.</p>
+        <span class="muted small" style="margin-left:10px">Have one? <a asp-page="Login">Sign in</a></span>
+    </form>
+</div>

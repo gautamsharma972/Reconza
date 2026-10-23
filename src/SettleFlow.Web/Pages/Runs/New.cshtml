@@ -1,0 +1,71 @@
+@page "{workflowId:guid}"
+@model SettleFlow.Web.Pages.Runs.NewModel
+@using System.Text.Json
+@{ ViewData["Title"] = "New run"; }
+<div class="page-head">
+    <div>
+        <div class="crumbs"><a asp-page="/Workflows/Index">Workflows</a> / <a asp-page="/Workflows/Edit" asp-route-id="@Model.Workflow.Id">@Model.Workflow.Name</a></div>
+        <h1>New run</h1>
+        <div class="muted">Upload this period's @Model.Def.Sources.Count files. Processing continues in the background — you can leave the page.</div>
+    </div>
+</div>
+
+@if (Model.SetupIssues.Count > 0)
+{
+    <div class="alert alert-warn"><strong>This workflow isn't ready yet.</strong> <a asp-page="/Workflows/Edit" asp-route-id="@Model.Workflow.Id">Finish setup</a>
+        <ul>@foreach (var e in Model.SetupIssues) { <li>@e</li> }</ul></div>
+}
+@if (Model.Errors.Count > 0)
+{
+    <div class="alert alert-bad"><strong>We couldn't start this run:</strong><ul>@foreach (var e in Model.Errors) { <li>@e</li> }</ul></div>
+}
+
+<form method="post" enctype="multipart/form-data" asp-route-workflowId="@Model.Workflow.Id" data-busy-form id="run-form">
+    <label class="dropzone" data-multi-drop>
+        <input type="file" multiple accept=".xlsx,.xls,.csv" data-multi-input />
+        <span class="dz-icon" aria-hidden="true">⤒</span>
+        <span><strong>Drop all @Model.Def.Sources.Count files here</strong> or click to choose them</span>
+        <span class="muted small">We'll match each file to its source by name — adjust below if needed. Up to @Model.Limits.MaxFileMb MB per file.</span>
+    </label>
+
+    <div class="slots">
+        @for (var i = 0; i < Model.Def.Sources.Count; i++)
+        {
+            var s = Model.Def.Sources[i];
+            var hints = new List<string> { s.Name };
+            if (Model.LastFileNames.TryGetValue(s.Name, out var last)) hints.Add(System.IO.Path.GetFileNameWithoutExtension(last));
+            hints.AddRange(s.ColumnMap.Values);
+            <div class="slot" data-slot data-hints="@JsonSerializer.Serialize(hints)">
+                <div class="slot-head">
+                    <span class="badge role-badge role-@s.Role">@s.Role</span>
+                    <strong>@s.Name</strong>
+                </div>
+                <label class="slot-drop">
+                    <input type="file" name="file_@i" accept=".xlsx,.xls,.csv" data-slot-input />
+                    <span class="slot-empty">Drop or choose file@(last is not null ? $" · last time: {last}" : "")</span>
+                    <span class="slot-file" hidden><span class="slot-check">✓</span> <span data-name></span> <span class="muted small" data-size></span></span>
+                </label>
+                <button type="button" class="btn-link small" data-clear hidden>Remove</button>
+            </div>
+        }
+    </div>
+
+    <div class="card row" style="margin-top:16px">
+        <div class="field" style="flex:1; min-width:240px; margin:0"><label asp-for="Label">Run label</label><input asp-for="Label" /></div>
+        <div class="spacer"></div>
+        <div class="muted small" data-slot-status></div>
+        <button class="btn btn-lg" type="submit" data-busy="Uploading and scanning…" data-submit-run data-blocked="@(Model.SetupIssues.Count > 0 ? "true" : null)">Start reconciliation →</button>
+    </div>
+</form>
+
+@if (Model.SamplesAvailable)
+{
+    <form method="post" asp-page-handler="Sample" asp-route-workflowId="@Model.Workflow.Id" class="card demo-card" data-busy-form>
+        <div>
+            <h3>No files handy? Try the demo week.</h3>
+            <p class="muted small" style="margin:0">Deliberately messy files: title rows, IDs like <code>T-1001</code> vs <code>t1001</code>, mixed date formats, duplicates, a short-paid trip and an orphan fuel fill.
+                <a asp-page="/Samples" asp-route-file="trips.xlsx">Download them</a> to see.</p>
+        </div>
+        <button class="btn btn-secondary" type="submit" data-busy="Queuing demo…">Run with demo files</button>
+    </form>
+}

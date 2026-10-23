@@ -1,0 +1,41 @@
+@page "/solutions/excel-reconciliation-software"
+@{
+    var faq = new (string Q, string A)[]
+    {
+        ("How is this different from Excel's own tools?", "Excel can match two clean columns. Reconza cleans the data first (IDs, dates, amounts), handles several files and one-to-many matches, explains every mismatch, and repeats the same rules every week without anyone rebuilding formulas."),
+        ("How is it different from Zapier or Make?", "Those are general automation builders. Reconza is purpose-built for reconciliation: matching, exceptions, review and a settlement report — no pipeline to design."),
+        ("Can I define my own reconciliation?", "Yes. Start from a blank workflow: define your fields, add each source file with its role, choose the keys to match on and the amounts to compare."),
+    };
+}
+@section Head {
+    @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Excel reconciliation software", "/solutions/excel-reconciliation-software")))
+    @JsonLd.Script(JsonLd.Faq(faq))
+}
+<section class="page-hero">
+    <span class="badge badge-brand">For finance &amp; operations teams</span>
+    <h1>Excel reconciliation software for reports that never match</h1>
+    <p>Merge and match supplier statements, branch reports and customer files without formulas. Messy headers, different date formats and inconsistent IDs are handled for you.</p>
+    <div class="row" style="justify-content:center"><a class="btn btn-lg" href="/tools/compare-excel-files">Compare two files free</a><a class="btn btn-lg btn-secondary" href="/Account/Register">Start free trial</a></div>
+</section>
+<div class="prose section">
+    <h2>Reconciliations people use it for</h2>
+    <ul>
+        <li><strong>Supplier statement vs purchase register</strong> — invoices missing on either side, amount differences.</li>
+        <li><strong>Distributor stock or claims reports</strong> — each distributor's format mapped once, compared against your dispatch records.</li>
+        <li><strong>Customer remittance vs invoices</strong> — which invoices a payment actually covers, and what was short-paid.</li>
+        <li><strong>Branch or warehouse reports</strong> — consolidating files that each branch formats a little differently.</li>
+    </ul>
+    <h2>What makes spreadsheets hard to reconcile</h2>
+    <ul>
+        <li><strong>Same ID, different spelling:</strong> <code>INV-0042</code>, <code>inv 42</code>, <code>INV0042</code>. Reconza compares a normalized form.</li>
+        <li><strong>Dates:</strong> dd/MM vs MM/dd, text vs real dates, Excel serial numbers — set the format per source once.</li>
+        <li><strong>Amounts as text:</strong> currency symbols, Indian digit grouping (1,23,456.00), brackets for negatives.</li>
+        <li><strong>Report noise:</strong> title rows above the header, blank rows, totals rows.</li>
+    </ul>
+    <p>For a quick one-off check, the <a href="/tools/compare-excel-files">free comparison tool</a> needs no account. For anything you do every week or month, set up a workflow and keep the history.</p>
+</div>
+<section class="section faq">
+    <h2 class="section-title">Questions</h2>
+    @foreach (var (q, a) in faq) { <details><summary>@q</summary><p>@a</p></details> }
+</section>
+<partial name="_Cta" model="@((string?)null)" />

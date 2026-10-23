@@ -1,0 +1,48 @@
+@page "/guides/fuel-card-reconciliation"
+@{ var page = Seo.For("/guides/fuel-card-reconciliation")!; ViewData["OgType"] = "article"; }
+@section Head {
+    @JsonLd.Script(JsonLd.Article(AppUrls, page))
+    @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Guides", "/guides"), (page.Title, page.Path)))
+}
+<partial name="_GuideHead" model="page" />
+<article class="prose guide">
+    <p class="lead">Fuel is usually the largest variable cost in a fleet and the easiest one to leak. Reconciling the fuel card statement against your trips each week answers two questions: <em>was every litre used on a real trip?</em> and <em>is it charged to the right driver?</em></p>
+
+    <h2>Decide what you'll match on</h2>
+    <p>Fuel card statements typically include transaction date and time, card number, vehicle registration, station, litres and amount. Pick the strongest link you have to your trip register, in this order:</p>
+    <ol>
+        <li><strong>Trip or load reference</strong> entered at the pump — the most reliable when drivers are disciplined about it.</li>
+        <li><strong>Vehicle + date window</strong> — the vehicle's trip that was running at the time of the fill.</li>
+        <li><strong>Card + driver assignment</strong> — only if each card stays with one driver.</li>
+    </ol>
+    <p>Whatever you choose, normalise it first: trip references arrive as <code>T-1001</code>, <code>t1001</code> or <code>T 1001</code>, and vehicle numbers with or without spaces (<code>MH12 AB 1234</code> vs <code>MH12AB1234</code>).</p>
+
+    <h2>A weekly routine</h2>
+    <ol>
+        <li><strong>Combine all vendor statements</strong> for the week into one list with the same columns. Watch for amounts stored as text and dates in dd/MM format being read as MM/dd.</li>
+        <li><strong>Remove exact duplicates</strong> — the same card, time and amount appearing twice is usually a statement export issue, not two fills.</li>
+        <li><strong>Match each fill to a trip.</strong> Fills with no match go on an exceptions list.</li>
+        <li><strong>Total fuel per trip and per driver</strong>, and deduct advances in the driver settlement.</li>
+        <li><strong>Review the red flags below</strong> before approving payments.</li>
+    </ol>
+
+    <h2>Red flags worth checking every week</h2>
+    <ul>
+        <li><strong>Fills with no trip.</strong> Typos are common, but a pattern on one card deserves a conversation.</li>
+        <li><strong>Two fills close together</strong> whose litres add up to more than the tank holds.</li>
+        <li><strong>Fills on days the vehicle had no trip</strong>, or at stations far from the route.</li>
+        <li><strong>Fuel efficiency outliers.</strong> Litres per trip compared with the route's usual consumption — compute km per litre per vehicle and look at the bottom few each week.</li>
+        <li><strong>Price-per-litre outliers</strong> versus other fills on the same day, which can indicate non-fuel purchases on the card.</li>
+    </ul>
+
+    <h2>Doing the matching in Excel</h2>
+    <p>With a cleaned trip reference in both sheets (see the <a href="/guides/weekly-driver-settlement-excel">driver settlement guide</a> for the formula), look up the driver and flag unmatched fills:</p>
+    <pre><code>Driver   =XLOOKUP([@@CleanRef], Trips[CleanRef], Trips[Driver], "NO TRIP")
+Fills    =COUNTIFS([CleanRef], [@@CleanRef])
+Litres   =SUMIFS([Litres], [CleanRef], [@@CleanRef])</code></pre>
+    <p>Filter <code>Driver = "NO TRIP"</code> for the exceptions list, and sort trips by litres to eyeball the heaviest consumers.</p>
+
+    <h2>What Reconza automates — and what it doesn't</h2>
+    <p><a href="/solutions/driver-settlement-software">Reconza</a> handles the matching part of this routine: it normalises references, removes exact duplicates, handles several fills on one trip, attributes fuel to drivers through their trips, lists fills with no matching trip, and deducts fuel in each driver's settlement and statement. Route- and mileage-based checks (tank capacity, km per litre, station location) still need your judgement and vehicle data — use the exceptions list as the starting point for those conversations.</p>
+</article>
+<partial name="_Cta" model="@("Match this week's fuel statement in minutes")" />

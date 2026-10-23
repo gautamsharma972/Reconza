@@ -1,0 +1,81 @@
+@page
+@model SettleFlow.Web.Pages.Settings.IndexModel
+@{ ViewData["Title"] = "Settings"; var limits = Plans.For(Model.Org.Plan); }
+<div class="page-head"><div><h1>Settings</h1><div class="muted">@Model.Org.Name</div></div></div>
+<div asp-validation-summary="All" class="alert alert-bad" style="@(ViewData.ModelState.IsValid ? "display:none" : "")"></div>
+<div class="grid grid-2" style="align-items:start">
+    <div class="card" style="grid-column: 1 / -1">
+        <h2>Service status</h2>
+        <div class="grid grid-3 status-grid">
+            <div><div class="stat-label">AI column suggestions</div><div class="status-line"><span class="dot @(Model.AiOk ? "dot-ok" : "")"></span>@Model.AiStatus</div>
+                <div class="hint">Only column headers and a few sample rows of a file you're setting up are used. Settlements are never calculated by AI.</div></div>
+            <div><div class="stat-label">Upload protection</div><div class="status-line"><span class="dot @(Model.ScanOk || Model.ScanStatus == "Built-in file checks" ? "dot-ok" : "dot-warn")"></span>@Model.ScanStatus</div>
+                <div class="hint">Workbooks with macros, embedded objects, ActiveX or external links are always rejected.</div></div>
+            <div><div class="stat-label">Background processing</div><div class="status-line"><span class="dot dot-ok"></span>@Model.QueueStatus</div>
+                <div class="hint">Runs continue in the background and are retried automatically if interrupted.</div></div>
+        </div>
+    </div>
+    </div>
+    <form method="post" asp-page-handler="Org" class="card">
+        <h2>Plan &amp; data retention</h2>
+        <div class="field"><label>Plan</label>
+            @if (Model.ManualPlanChange)
+            {
+                <select asp-for="Plan" disabled="@(!Model.IsOwner)">
+                    @foreach (var (p, l) in Plans.Limits) { <option value="@p" selected="@(p == Model.Plan)">@l.Name — @l.PriceIndia / @l.PriceIntl</option> }
+                </select>
+                
+            }
+            else
+            {
+                <input type="hidden" asp-for="Plan" />
+                <div class="row"><strong>@limits.Name</strong> <a class="btn btn-sm btn-secondary" asp-page="/Billing/Index">Manage subscription</a></div>
+            }
+        </div>
+        <div class="field"><label asp-for="RetentionDays">Delete uploaded files and reports after (days)</label>
+            <input asp-for="RetentionDays" type="number" min="1" max="3650" style="max-width:140px" disabled="@(!Model.IsOwner)" />
+            <div class="hint">Run summaries, exceptions and the audit log are kept; source files and generated workbooks are permanently deleted.</div></div>
+        @if (Model.IsOwner) { <button class="btn" type="submit">Save</button> }
+        <dl class="kv small" style="margin-top:18px">
+            <dt>Max file size</dt><dd>@limits.MaxFileMb MB</dd>
+            <dt>Rows / month</dt><dd>@limits.MonthlyRows.ToString("N0")</dd>
+            <dt>Saved workflows</dt><dd>@limits.Workflows</dd>
+            <dt>Seats</dt><dd>@limits.Seats</dd>
+            <dt>Runs / month</dt><dd>@(limits.MonthlyRuns?.ToString() ?? "Unlimited")</dd>
+        </dl>
+    </form>
+    <div class="card">
+        <h2>Team (@Model.Members.Count / @limits.Seats seats)</h2>
+        <table>
+            <tbody>
+            @foreach (var m in Model.Members)
+            {
+                <tr><td>@m.Email
+                        @if (m.IsOwner) { <span class="badge badge-brand">Owner</span> }
+                        @if (m.PasswordHash is null) { <span class="badge badge-warn">Invited · pending</span> }</td>
+                    <td class="right">@if (Model.IsOwner && !m.IsOwner)
+                    {
+                        if (m.PasswordHash is null)
+                        {
+                            <form method="post" asp-page-handler="ResendInvite" class="inline-form"><input type="hidden" name="userId" value="@m.Id" />
+                                <button class="btn btn-sm btn-secondary">Resend</button></form>
+                        }
+                        <form method="post" asp-page-handler="RemoveMember" class="inline-form"><input type="hidden" name="userId" value="@m.Id" />
+                            <button class="btn btn-sm btn-danger" data-confirm="Remove @m.Email?">@(m.PasswordHash is null ? "Cancel invite" : "Remove")</button></form>
+                    }</td></tr>
+            }
+            </tbody>
+        </table>
+        @if (Model.IsOwner)
+        {
+            <form method="post" asp-page-handler="AddMember" style="margin-top:16px" data-busy-form>
+                <h3>Invite a teammate</h3>
+                <div class="row" style="flex-wrap:nowrap">
+                    <input asp-for="MemberEmail" type="email" placeholder="name@company.com" required />
+                    <button class="btn btn-secondary" type="submit" data-busy="Sending…">Send invite</button>
+                </div>
+                <div class="hint">They'll get an email link to set their own password. Links expire after 3 days.</div>
+            </form>
+        }
+    </div>
+</div>

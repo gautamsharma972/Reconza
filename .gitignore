@@ -1,0 +1,10 @@
+bin/
+obj/
+App_Data/
+*.db
+.vs/
+dev-test-account.txt
+**/App_Data/
+.DS_Store
+dist/
+**/appsettings.Server.json

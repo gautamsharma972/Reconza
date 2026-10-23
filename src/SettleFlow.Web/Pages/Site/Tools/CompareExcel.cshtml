@@ -1,0 +1,120 @@
+@page "/tools/compare-excel-files"
+@model SettleFlow.Web.Pages.Site.Tools.CompareExcelModel
+@{
+    var r = Model.Result;
+    var faq = new (string Q, string A)[]
+    {
+        ("How does it decide which rows match?", "It looks for the pair of columns whose values overlap the most and look like IDs (invoice numbers, order IDs, trip numbers). IDs are compared in a normalized form, so INV-0042, inv 42 and INV0042 match. You can change the key columns after the first comparison."),
+        ("Are my files stored?", "No. Files are held in server memory for 15 minutes so you can change columns or download the result, then discarded. They are never written to disk or a database."),
+        ("What are the limits?", "Up to 2 MB and 5,000 rows per file, .xlsx, .xls or .csv. For bigger files, more than two files, or a comparison you run every week, use a free Reconza account."),
+        ("Is it really free?", "Yes — no sign-up, no email. It's a small piece of the reconciliation engine behind Reconza."),
+    };
+}
+@section Head {
+    @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Free tools", "/tools/compare-excel-files"), ("Compare two Excel files", "/tools/compare-excel-files")))
+    @JsonLd.Script(JsonLd.Faq(faq))
+    @JsonLd.Script(new Dictionary<string, object> { ["@context"] = "https://schema.org", ["@type"] = "WebApplication", ["name"] = "Compare two Excel files", ["url"] = AppUrls.Absolute("/tools/compare-excel-files"), ["applicationCategory"] = "BusinessApplication", ["operatingSystem"] = "Web", ["offers"] = new Dictionary<string, object> { ["@type"] = "Offer", ["price"] = "0", ["priceCurrency"] = "INR" } })
+}
+<section class="page-hero">
+    <span class="badge badge-ok">Free · no sign-up · files not stored</span>
+    <h1>Compare two Excel files online</h1>
+    <p>Upload two spreadsheets — an invoice list and a payment report, your orders and a marketplace settlement, your trips and a customer's statement. See what's missing from each, what's duplicated, and where amounts differ.</p>
+</section>
+
+@if (Model.Error is not null) { <div class="alert alert-bad">@Model.Error</div> }
+
+<form method="post" enctype="multipart/form-data" class="card tool-card" data-busy-form>
+    <div class="grid grid-2">
+        <label class="dropzone" data-dropzone>
+            <input type="file" name="fileA" accept=".xlsx,.xls,.csv" />
+            <span class="dz-icon" aria-hidden="true">A</span>
+            <span><strong>First file</strong> — drop or choose</span>
+            <span class="dz-file muted small">@(r is not null ? Model.NameA : "")</span>
+        </label>
+        <label class="dropzone" data-dropzone>
+            <input type="file" name="fileB" accept=".xlsx,.xls,.csv" />
+            <span class="dz-icon" aria-hidden="true">B</span>
+            <span><strong>Second file</strong> — drop or choose</span>
+            <span class="dz-file muted small">@(r is not null ? Model.NameB : "")</span>
+        </label>
+    </div>
+    <div class="row" style="justify-content:center">
+        <button class="btn btn-lg" type="submit" asp-page-handler="Upload" data-busy="Comparing…">Compare files</button>
+        <button class="btn btn-lg btn-secondary" type="submit" asp-page-handler="Sample" data-busy="Comparing…" formnovalidate>Try with sample files</button>
+    </div>
+    <p class="muted small center" style="margin:10px 0 0">.xlsx, .xls or .csv · up to 2 MB and 5,000 rows each · deleted from memory after 15 minutes</p>
+</form>
+
+@if (r is not null)
+{
+    <section class="section" id="results">
+        <h2 class="section-title">Results: @Model.NameA vs @Model.NameB</h2>
+        <form method="post" class="card row tool-options" data-busy-form>
+            <input type="hidden" asp-for="Token" />
+            <div class="field"><label>Match rows on (A)</label><select asp-for="KeyA">@foreach (var h in Model.HeadersA) { <option value="@h" selected="@(h == Model.KeyA)">@h</option> }</select></div>
+            <div class="field"><label>… and (B)</label><select asp-for="KeyB">@foreach (var h in Model.HeadersB) { <option value="@h" selected="@(h == Model.KeyB)">@h</option> }</select></div>
+            <div class="field"><label>Amount (A)</label><select asp-for="AmountA"><option value="">— none —</option>@foreach (var h in Model.HeadersA) { <option value="@h" selected="@(h == Model.AmountA)">@h</option> }</select></div>
+            <div class="field"><label>Amount (B)</label><select asp-for="AmountB"><option value="">— none —</option>@foreach (var h in Model.HeadersB) { <option value="@h" selected="@(h == Model.AmountB)">@h</option> }</select></div>
+            <button class="btn btn-secondary" type="submit" asp-page-handler="Recompare" data-busy="Comparing…">Compare again</button>
+            <button class="btn" type="submit" asp-page-handler="Download">⤓ Download Excel</button>
+        </form>
+
+        <div class="grid grid-4" style="margin:16px 0">
+            <div class="stat"><div class="stat-label">Matched</div><div class="stat-value ok-ink">@r.Matched</div><div class="stat-sub">of @r.RowsA / @r.RowsB rows</div></div>
+            <div class="stat"><div class="stat-label">Only in A</div><div class="stat-value @(r.OnlyInA.Count > 0 ? "warn-ink" : "")">@r.OnlyInA.Count</div><div class="stat-sub">missing from @Model.NameB</div></div>
+            <div class="stat"><div class="stat-label">Only in B</div><div class="stat-value @(r.OnlyInB.Count > 0 ? "warn-ink" : "")">@r.OnlyInB.Count</div><div class="stat-sub">missing from @Model.NameA</div></div>
+            <div class="stat"><div class="stat-label">Amount differences</div><div class="stat-value @(r.AmountDiffs.Count > 0 ? "warn-ink" : "")">@(r.AmountA is null || r.AmountB is null ? "—" : r.AmountDiffs.Count.ToString())</div>
+                <div class="stat-sub">@(r.DuplicatesA.Count + r.DuplicatesB.Count) duplicate row(s)</div></div>
+        </div>
+
+        @{
+            void Rows(string title, List<SettleFlow.Core.Engine.CompareRow> rows)
+            {
+                if (rows.Count == 0) return;
+                <div class="card card-tight" style="margin-bottom:14px">
+                    <div class="card-head"><h3 style="margin:0">@title <span class="muted small">(@rows.Count)</span></h3></div>
+                    <div class="table-wrap"><table>
+                        <thead><tr><th>Row</th><th>Key</th><th class="num">Amount</th><th>Row data</th></tr></thead>
+                        <tbody>@foreach (var x in rows.Take(100)) { <tr><td class="mono">@x.RowNumber</td><td class="mono">@x.Key</td><td class="num">@x.Amount?.ToString("N2")</td><td class="small muted">@string.Join(" · ", x.Cells.Where(c => c.Length > 0).Take(6))</td></tr> }</tbody>
+                    </table></div>
+                    @if (rows.Count > 100) { <p class="muted small" style="padding:0 20px">Showing 100 of @rows.Count — download the Excel file for all.</p> }
+                </div>
+            }
+        }
+        @if (r.AmountDiffs.Count > 0)
+        {
+            <div class="card card-tight" style="margin-bottom:14px">
+                <div class="card-head"><h3 style="margin:0">Amount differences <span class="muted small">(@r.AmountDiffs.Count)</span></h3></div>
+                <div class="table-wrap"><table>
+                    <thead><tr><th>Key</th><th class="num">@r.AmountA (A)</th><th class="num">@r.AmountB (B)</th><th class="num">Difference</th></tr></thead>
+                    <tbody>@foreach (var d in r.AmountDiffs.Take(100)) { <tr><td class="mono">@d.Key</td><td class="num">@d.AmountA.ToString("N2")</td><td class="num">@d.AmountB.ToString("N2")</td><td class="num @(d.Difference < 0 ? "neg" : "")">@d.Difference.ToString("+#,##0.00;-#,##0.00")</td></tr> }</tbody>
+                </table></div>
+            </div>
+        }
+        @{ Rows($"Only in {Model.NameA}", r.OnlyInA); Rows($"Only in {Model.NameB}", r.OnlyInB); Rows($"Duplicates in {Model.NameA}", r.DuplicatesA); Rows($"Duplicates in {Model.NameB}", r.DuplicatesB); }
+        @if (r.OnlyInA.Count + r.OnlyInB.Count + r.AmountDiffs.Count + r.DuplicatesA.Count + r.DuplicatesB.Count == 0)
+        {
+            <div class="card empty"><div class="empty-icon">✓</div><strong>These files reconcile perfectly.</strong></div>
+        }
+
+        <div class="cta-inline card">
+            <div><strong>Doing this every week?</strong> Reconza remembers your columns, handles 3+ files at once, computes settlements and keeps an audit trail.</div>
+            <a class="btn" href="/Account/Register">Automate it free →</a>
+        </div>
+    </section>
+}
+
+<section class="section prose">
+    <h2>How to compare two Excel files for differences</h2>
+    <ol>
+        <li><strong>Upload both files.</strong> They don't need the same layout — title rows above the header and differently named columns are fine.</li>
+        <li><strong>Check the key columns.</strong> We pick the columns that look like the same ID in both files (invoice number, order ID, trip number). Change them if needed.</li>
+        <li><strong>Pick amount columns</strong> to compare values for matched rows — for example invoice amount vs amount paid.</li>
+        <li><strong>Review and download.</strong> Rows missing from either file, duplicates and amount differences, as an Excel workbook.</li>
+    </ol>
+    <p>Doing it in Excel instead? The usual approach is <code>XLOOKUP</code> or <code>VLOOKUP</code> on a cleaned key column in both sheets, plus a <code>COUNTIF</code> to find duplicates. It works for one-off checks; it gets fragile when IDs are formatted differently or the files change every week.</p>
+</section>
+<section class="section faq">
+    <h2 class="section-title">Questions</h2>
+    @foreach (var (q, a) in faq) { <details><summary>@q</summary><p>@a</p></details> }
+</section>

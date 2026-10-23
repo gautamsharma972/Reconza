@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SettleFlow.Core/SettleFlow.Core.csproj" />
+    <Project Path="src/SettleFlow.Web/SettleFlow.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SettleFlow.Tests/SettleFlow.Tests.csproj" />
+  </Folder>
+</Solution>

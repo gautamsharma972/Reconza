@@ -1,0 +1,43 @@
+@page "/security"
+@inject IMalwareScanner Scanner
+@inject AppOptions App
+@section Head { @JsonLd.Script(JsonLd.Breadcrumbs(AppUrls, ("Home", "/"), ("Security", "/security"))) }
+<section class="page-hero">
+    <h1>Security &amp; data handling</h1>
+    <p>Settlement files contain driver names, rates and your margins. Here's exactly how Reconza handles them.</p>
+</section>
+<div class="prose">
+    <h2>Your data stays yours</h2>
+    <ul>
+        <li><strong>Company isolation.</strong> Every record is tagged with your organisation, and every database query is filtered by it automatically. Writes that cross organisations are blocked.</li>
+        <li><strong>Encrypted at rest.</strong> Uploaded files and generated reports are encrypted with a key specific to your organisation before they're stored.</li>
+        <li><strong>Automatic deletion.</strong> Uploaded files and reports are permanently deleted after your retention period (30 days by default, configurable). You can also delete a run's files at any time. Summaries and the audit log are kept.</li>
+    </ul>
+    <h2>Every upload is checked</h2>
+    <ul>
+        <li>Only .xlsx, .xls and .csv files are accepted, and the file contents must match the extension.</li>
+        <li>Workbooks containing macros, embedded objects, ActiveX controls or links to other workbooks are rejected.</li>
+        <li>Oversized and "zip bomb" files are refused.</li>
+        @if (Scanner.Mode != ScanMode.Off)
+        {
+            <li>Files are scanned with the ClamAV antivirus engine@(Scanner.Mode == ScanMode.Required ? "; if the scanner is unavailable, uploads are paused rather than accepted unscanned" : "").</li>
+        }
+    </ul>
+    <h2>Safe Excel output</h2>
+    <p>Text that a spreadsheet could interpret as a formula (for example a cell beginning with <code>=</code>, <code>+</code> or <code>@@</code>) is neutralised in every export, and totals are written as values, so opening a report can't trigger formula injection.</p>
+    <h2>Accounts &amp; access</h2>
+    <ul>
+        <li>Passwords are hashed; accounts lock after repeated failed sign-ins, and sign-in pages are rate-limited.</li>
+        <li>Team members join by single-use email invitation. Password-reset links expire after 3 hours.</li>
+        <li>An audit log records workflow changes, runs (with a SHA-256 fingerprint of every file), exception decisions, downloads and deletions.</li>
+    </ul>
+    <h2>AI and your data</h2>
+    <p>Reconza never uses AI to calculate settlements. When AI column-mapping is enabled, only the column headers and a few sample rows of a file you're setting up are sent — to an open-source model running on our own servers, not to a third-party AI provider.</p>
+    <h2>Payments</h2>
+    <p>Payments are handled by Razorpay (India) and Stripe (international). Reconza never receives or stores card details.</p>
+    @if (!string.IsNullOrEmpty(App.SupportEmail))
+    {
+        <p class="muted">Questions about security? Email <a href="mailto:@App.SupportEmail">@App.SupportEmail</a> and we'll answer in detail.</p>
+    }
+</div>
+<partial name="_Cta" model="@((string?)null)" />

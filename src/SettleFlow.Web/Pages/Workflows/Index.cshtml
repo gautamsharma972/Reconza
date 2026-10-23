@@ -1,0 +1,55 @@
+@page
+@model SettleFlow.Web.Pages.Workflows.IndexModel
+@using SettleFlow.Core.Presets
+@{ ViewData["Title"] = "Workflows"; }
+<div class="page-head">
+    <div><h1>Workflows</h1><div class="muted">A workflow is a saved recipe: which files come in, how columns map, how records reconcile, and what the report looks like.</div></div>
+</div>
+<div class="grid grid-2" style="align-items:start">
+    <div class="card card-tight">
+        <div class="card-head"><h2 style="margin:0">Saved workflows</h2><span class="muted small">@Model.Workflows.Count of @Model.Limits.Workflows</span></div>
+        @if (Model.Workflows.Count == 0)
+        {
+            <div class="empty">None yet — create one from a template.</div>
+        }
+        else
+        {
+            <table>
+                <thead><tr><th>Name</th><th>Runs</th><th>Last run</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var w in Model.Workflows)
+                {
+                    var s = Model.RunStats.GetValueOrDefault(w.Id);
+                    <tr>
+                        <td><a asp-page="Edit" asp-route-id="@w.Id">@w.Name</a></td>
+                        <td>@s.Runs</td>
+                        <td class="muted small">@(s.Last?.ToString("dd MMM yyyy") ?? "—")</td>
+                        <td class="right">
+                            <a class="btn btn-sm" asp-page="/Runs/New" asp-route-workflowId="@w.Id">Run</a>
+                            <form method="post" asp-page-handler="Delete" asp-route-id="@w.Id" class="inline-form">
+                                <button class="btn btn-sm btn-danger" data-confirm="Delete '@w.Name'? Past runs and reports are kept.">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+    <div class="card">
+        <h2>New workflow</h2>
+        <div asp-validation-summary="All" class="alert alert-bad" style="@(ViewData.ModelState.IsValid ? "display:none" : "")"></div>
+        <form method="post" asp-page-handler="Create">
+            <div class="field"><label asp-for="Name">Name</label><input asp-for="Name" placeholder="e.g. Weekly driver pay — West region" /></div>
+            <label>Start from</label>
+            @foreach (var p in WorkflowPresets.All)
+            {
+                <label class="card" style="display:block; padding:12px 14px; margin:0 0 8px; cursor:pointer; font-weight:400">
+                    <span class="check"><input type="radio" name="Preset" value="@p.Key" checked="@(p.Key == Model.Preset)" /> <strong>@p.Name</strong></span>
+                    <span class="muted small" style="display:block; margin:4px 0 0 22px">@p.Description</span>
+                </label>
+            }
+            <button class="btn" type="submit" style="margin-top:6px">Create workflow</button>
+        </form>
+    </div>
+</div>

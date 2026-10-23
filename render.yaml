@@ -1,0 +1,35 @@
+# Render Blueprint — free web service. Database: Neon (free Postgres), set DATABASE_URL when prompted.
+services:
+  - type: web
+    name: reconza
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL            # Neon "direct" (non-pooled) connection string
+        sync: false
+      - key: DataProtection__MasterKey   # generated once by Render; back it up — losing it makes stored files unreadable
+        generateValue: true
+      - key: Storage__Provider       # no persistent disk on the free plan: keep encrypted files in Postgres
+        value: Database
+      - key: Scanning__Mode          # ClamAV doesn't fit the free tier; built-in upload checks still apply
+        value: "Off"
+      - key: Ollama__Enabled         # AI mapping off; rule-based suggestions are used
+        value: "false"
+      - key: Workers__Concurrency
+        value: "1"
+      - key: Tools__CacheMb          # free comparison tool memory cap (512 MB instance)
+        value: "48"
+      - key: App__SupportEmail
+        sync: false
+      - key: Email__SmtpHost         # optional until you set up email (invites/password reset need it)
+        sync: false
+      - key: Email__Username
+        sync: false
+      - key: Email__Password
+        sync: false
+      - key: Email__FromAddress
+        sync: false
