@@ -172,6 +172,14 @@ builder.Services.Configure<ForwardedHeadersOptions>(o =>
     o.KnownIPNetworks.Clear();
     o.KnownProxies.Clear();
 });
+// HTTPS-only for a year once a browser has seen the site (HSTS). Preload is left off until the bare domain
+// also serves HTTPS with this header (a requirement of the browser preload list).
+builder.Services.AddHsts(o =>
+{
+    o.MaxAge = TimeSpan.FromDays(365);
+    o.IncludeSubDomains = true;
+    o.Preload = false;
+});
 builder.Services.AddRateLimiter(o =>
 {
     o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
